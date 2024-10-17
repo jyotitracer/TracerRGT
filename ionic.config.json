@@ -1,0 +1,7 @@
+{
+  "name": "TracerRGT",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
