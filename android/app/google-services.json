@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "855664685823",
+    "project_id": "tracerrgt",
+    "storage_bucket": "tracerrgt.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:855664685823:android:9ec6b80c2e1ccd9a3752ca",
+        "android_client_info": {
+          "package_name": "in.co.tracer.rgt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjFlegnf7Jp4ttc04u46drTR7CPB5Cij4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:855664685823:android:ad47b2d75ade73103752ca",
+        "android_client_info": {
+          "package_name": "in.co.tracer.tracerrgt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjFlegnf7Jp4ttc04u46drTR7CPB5Cij4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

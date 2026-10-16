@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <!-- This will be your main application theme for edge-to-edge -->
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:background">@null</item>
+
+        <!-- *** BEGIN EDGE-TO-EDGE MODIFICATIONS *** -->
+
+        <!-- Make the status bar fully transparent so content can go behind it -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <!-- Make the navigation bar (bottom system bar) fully transparent -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- Allow the window to draw behind the system bars -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- Request "decor fits system windows" false to let content go full screen -->
+        <!-- These are effective for older Android versions including API 29 (Android 10) -->
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+
+        <!-- Light Status Bar Icons (for when your content is dark) -->
+        <!-- If your app background is light at the top, you might want dark icons:
+        <item name="android:windowLightStatusBar">true</item>
+        -->
+        <!-- If your content at the top is dark, you want light icons (default):
+        <item name="android:windowLightStatusBar">false</item>
+        -->
+
+        <!-- *** END EDGE-TO-EDGE MODIFICATIONS *** -->
+    </style>
+
+
+    <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
+        <item name="android:background">@drawable/splash</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+</resources>

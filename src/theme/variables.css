@@ -1,2 +1,58 @@
 /* For information on how to create your own theme, please see:
 http://ionicframework.com/docs/theming/ */
+
+:root {
+  /**
+   * App Global Style - Light Mode
+   * --------------------------------------------------------------------
+   * By default, the app will use these colors. If you want your app
+   * to be dark mode by default, you can move the variables from
+   * body.dark into :root.
+  */
+
+  --ion-background-color: #5b575b; /* A standard light background */
+  --ion-text-color: #fff;       /* Standard light mode text */
+
+  /* Your brand colors remain the same in both modes */
+  --ion-color-primary: #f59c20;
+  --ion-color-brownishGrey: #645d5d;
+  --ion-color-pinkishGrey:#c4c4c4;
+  --ion-color-paleSalmon:#fdcf9f;
+  --ion-color-whiteTwo:#d4d4d4;
+  --ion-color-veryLightPink:#e5e5e5;
+  --ion-color-greyishBrown:#433b3b;
+  --ion-color-purplishGrey:#5b575b;
+}
+
+
+/*
+ * App Dark Theme
+ * --------------------------------------------------------------------
+ * To use this, the `dark` class is added to the body element.
+ * Ionic automatically does this based on the prefers-color-scheme
+ * media query.
+ */
+@media (prefers-color-scheme: dark) {
+  /*
+   * We are overriding the default variables with your dark theme colors
+   * inside the :root selector.
+   */
+  :root {
+    --ion-background-color: #5b575b; /* Background color ion-color-purplishGrey */
+    --ion-text-color: #c4c4c4;       /* Text color pinkishGrey */
+
+    /*
+     * You can also override your other custom colors here if they need
+     * to look different on a dark background. For now, we will keep
+     * them the same as in the light theme.
+    */
+    --ion-color-primary: #f59c20;
+    --ion-color-brownishGrey: #645d5d;
+    --ion-color-pinkishGrey: #c4c4c4;
+    --ion-color-paleSalmon: #fdcf9f;
+    --ion-color-whiteTwo: #d4d4d4;
+    --ion-color-veryLightPink: #e5e5e5;
+    --ion-color-greyishBrown: #433b3b;
+    --ion-color-purplishGrey: #5b575b;
+  }
+}
