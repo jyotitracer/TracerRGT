@@ -16,79 +16,76 @@
 
     </ion-buttons>
    
-  </ion-toolbar>
-
+      </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true">
-     
 
-  <ion-content :fullscreen="true" class="ion-padding page-background">
-
-      <!-- Search Bars -->
-      <div class="search-container">
-        <ion-searchbar
-          class="custom-searchbar"
-          placeholder="Site"
-          v-model="siteSearchQuery"
-        ></ion-searchbar>
-        <ion-searchbar
-          class="custom-searchbar"
-          placeholder="Generator"
-          v-model="geneSearchQuery"
-        ></ion-searchbar>
-      </div>
-
-      <!-- Generator List Container -->
-      <div class="list-container">
-        <!-- List Header -->
-        <div class="list-header">
-          <span class="header-sno">S.No</span>
-          <span class="header-name">Generator Name</span>
-          <div class="header-switch-control">
-            <span class="switch-label">OFF</span>
-            <ion-toggle
-              :checked="areAllOn"
-              :disabled="true"
-              mode="ios"
-              class="small-toggle"
-            ></ion-toggle>
-            <span class="switch-label">ON</span>
-          </div>
-          <span class="header-cancel">Cancel</span>
+    <ion-content :fullscreen="true" class="ion-padding page-background">
+      <div class="gen-onoff-wrapper">
+        <!-- Search Bars -->
+        <div class="search-container">
+          <ion-searchbar
+            class="custom-searchbar"
+            placeholder="Site"
+            v-model="siteSearchQuery"
+          ></ion-searchbar>
+          <ion-searchbar
+            class="custom-searchbar"
+            placeholder="Generator"
+            v-model="geneSearchQuery"
+          ></ion-searchbar>
         </div>
 
-        <hr class="divider" />
-
-        <!-- List of Generators (Replaces RecyclerView) -->
-        <ion-list v-if="filteredGenerators.length > 0" class="generator-list">
-          <div v-for="(gen, index) in filteredGenerators" :key="gen.id" class="list-item-wrapper">
-            <div class="list-item">
-              <span class="item-sno">{{ index + 1 }}</span>
-              <div class="item-name-block">
-                <span class="item-name">{{ gen.name }}</span>
-                <span class="item-site" v-if="gen.siteName">{{ gen.siteName }}</span>
-              </div>
-              <div class="item-switch-control">
-                <ion-toggle
-                  v-model="gen.isOn"
-                  @ionChange="toggleGenerator(gen)"
-                  mode="ios"
-                  class="small-toggle"
-                ></ion-toggle>
-              </div>
-              <span class="item-cancel" @click="cancelAction(gen.id)">Cancel</span>
+        <!-- Generator List Container (Full Card) -->
+        <div class="list-container">
+          <!-- List Header -->
+          <div class="list-header">
+            <span class="header-sno">S.No</span>
+            <span class="header-name">Generator Name</span>
+            <div class="header-switch-control">
+              <span class="switch-label">OFF</span>
+              <ion-toggle
+                :checked="areAllOn"
+                :disabled="true"
+                mode="ios"
+                class="small-toggle"
+              ></ion-toggle>
+              <span class="switch-label">ON</span>
             </div>
+            <span class="header-cancel">Cancel</span>
           </div>
-        </ion-list>
-        
-        <!-- No Data Message -->
-        <div v-else class="no-data-message">
-          <p>{{ noDataText }}</p>
+
+          <hr class="divider" />
+
+          <!-- List of Generators (Replaces RecyclerView) -->
+          <ion-list v-if="filteredGenerators.length > 0" class="generator-list">
+            <div v-for="(gen, index) in filteredGenerators" :key="gen.id" class="list-item-wrapper">
+              <div class="list-item">
+                <span class="item-sno">{{ index + 1 }}</span>
+                <div class="item-name-block">
+                  <span class="item-name">{{ gen.name }}</span>
+                  <span class="item-site" v-if="gen.siteName">{{ gen.siteName }}</span>
+                </div>
+                <div class="item-switch-control">
+                  <ion-toggle
+                    v-model="gen.isOn"
+                    @ionChange="toggleGenerator(gen)"
+                    mode="ios"
+                    class="small-toggle"
+                  ></ion-toggle>
+                </div>
+                <span class="item-cancel" @click="cancelAction(gen.id)">Cancel</span>
+              </div>
+            </div>
+          </ion-list>
+          
+          <!-- No Data Message -->
+          <div v-else class="no-data-message">
+            <p>{{ noDataText }}</p>
+          </div>
+
         </div>
-
       </div>
-
-    </ion-content>    </ion-content>
+    </ion-content>
   </ion-page>
 </template>
 
@@ -141,13 +138,42 @@ const loadGenerators = async () => {
     }
   } catch (error) {
     console.error('Failed to load generators from API, keeping default list:', error);
-    // Keep fallback sample data if offline/empty
+    // Keep fallback sample data from cached dashboard or default
     if (generators.value.length === 0) {
-      generators.value = [
-        { id: 1, name: 'GEN-001 Alpha', isOn: true },
-        { id: 2, name: 'GEN-002 Bravo', isOn: false },
-        { id: 3, name: 'GEN-003 Charlie', isOn: true },
-      ];
+      try {
+        const cached = localStorage.getItem('dashboard_detail');
+        if (cached) {
+          const d = JSON.parse(cached);
+          if (Array.isArray(d?.site_arr)) {
+            const list: GenItem[] = [];
+            d.site_arr.forEach((s: any) => {
+              if (Array.isArray(s.gen_arr)) {
+                s.gen_arr.forEach((g: any) => {
+                  list.push({
+                    id: g.id,
+                    name: `${g.name} (${s.name})`,
+                    isOn: Boolean(g.stsicon_gen === 1 || g.gen_sts === 'Generator ON'),
+                    siteName: s.name,
+                  });
+                });
+              }
+            });
+            if (list.length > 0) {
+              generators.value = list;
+            }
+          }
+        }
+      } catch (e) {}
+
+      if (generators.value.length === 0) {
+        generators.value = [
+          { id: 135, name: 'EG 172 (150 KVA) (PMVE)', isOn: true, siteName: 'PMVE' },
+          { id: 199, name: 'EG 197 (200 KVA) (J#327)', isOn: true, siteName: 'J#327' },
+          { id: 173, name: 'EG 262 (20 KVA) (J#327)', isOn: true, siteName: 'J#327' },
+          { id: 63, name: 'EG 01 (30 KVA) (PMVE)', isOn: false, siteName: 'PMVE' },
+          { id: 68, name: 'EG 105 (150 KVA) (PMVE)', isOn: false, siteName: 'PMVE' },
+        ];
+      }
     }
   } finally {
     isLoading.value = false;
@@ -206,7 +232,7 @@ const cancelAction = async (id: number | string) => {
 
 
 const goToHelpScreen = () => {
-  router.push('/helpscreen');
+  router.push('/helpscreen/5');
 };
 
 const goToSharePage = async () => {
@@ -264,35 +290,44 @@ ion-icon{
   }
 
 
+.gen-onoff-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 120px);
+  gap: 12px;
+}
+
 /* Container for the two search bars */
 .search-container {
   display: flex;
-  gap: 14px; /* Space between search bars */
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 4px;
 }
 
 /* Custom styling for ion-searchbar to match the XML */
 .custom-searchbar {
-  --background: var( --ion-color-brownishGrey); /* brownishGrey */
-  --color: #fff; /* paleSalmon text color */
+  --background: var(--ion-color-brownishGrey, #3e3835);
+  --color: #fff;
   --placeholder-color: #a0998e;
   --icon-color: #fff;
   --border-radius: 8px;
   --box-shadow: none;
   padding: 0;
   height: 40px;
-  font-size: 10px;
-  flex: 1; /* Each search bar takes equal space */
+  font-size: 11px;
+  flex: 1;
 }
 
 /* Main container for the list header and items */
 .list-container {
-  background-color: var( --ion-color-brownishGrey); /* brownishGrey */
-  padding: 10px;
-  border-radius: 8px;
+  background-color: var(--ion-color-brownishGrey, #2a2524);
+  padding: 12px 14px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 50px); /* Adjust based on search bar height */
+  flex: 1;
+  min-height: calc(100vh - 180px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
 /* Header row styling */

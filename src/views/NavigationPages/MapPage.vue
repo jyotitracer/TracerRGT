@@ -129,7 +129,7 @@ declare global {
 
 
 const goToHelpScreen = () => {
-  router.push('/helpscreen');
+  router.push('/helpscreen/4');
 };
 
 const goToSharePage = async () => {

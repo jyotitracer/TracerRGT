@@ -1,0 +1,6 @@
+{
+  "name": "Tracer RGT",
+  "description": "Remote Generator Telemetry dashboard for real-time genset monitoring, alarms, fuel tracking, and generator control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

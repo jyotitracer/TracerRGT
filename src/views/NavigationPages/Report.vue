@@ -51,7 +51,7 @@ import { notifications, barChart, funnel } from 'ionicons/icons';
 
 
 const goToHelpScreen = () => {
-  router.push('/helpscreen');
+  router.push('/helpscreen/3');
 };
 
 const goToSharePage = async () => {

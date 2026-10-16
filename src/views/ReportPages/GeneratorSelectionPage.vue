@@ -115,21 +115,72 @@ const filteredGenerators = computed(() => {
 
 // --- METHODS ---
 
-// Simulates fetching generator data from a server
+// Fetches real generator data from dashboard API or cached site_arr
 const fetchGenerators = async () => {
   isLoading.value = true;
-  console.log('Fetching generators...');
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Mock data
+  try {
+    const { getDashboardDetail } = await import('@/services/ApiService');
+    const res = await getDashboardDetail();
+    if (res.status === 200 && res.data) {
+      const d = res.data;
+      const siteArr = d.site_arr || d.arr_site || d.data?.site_arr;
+      if (Array.isArray(siteArr) && siteArr.length > 0) {
+        const list: Generator[] = [];
+        siteArr.forEach((s: any) => {
+          if (Array.isArray(s.gen_arr)) {
+            s.gen_arr.forEach((g: any) => {
+              list.push({
+                id: String(g.id),
+                name: `${g.name} (${s.name})`,
+              });
+            });
+          }
+        });
+        if (list.length > 0) {
+          allGenerators.value = list;
+          isLoading.value = false;
+          return;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('API error in GeneratorSelectionPage:', e);
+  }
+
+  // Fallback to cached dashboard detail
+  try {
+    const cached = localStorage.getItem('dashboard_detail');
+    if (cached) {
+      const d = JSON.parse(cached);
+      const siteArr = d?.site_arr;
+      if (Array.isArray(siteArr) && siteArr.length > 0) {
+        const list: Generator[] = [];
+        siteArr.forEach((s: any) => {
+          if (Array.isArray(s.gen_arr)) {
+            s.gen_arr.forEach((g: any) => {
+              list.push({
+                id: String(g.id),
+                name: `${g.name} (${s.name})`,
+              });
+            });
+          }
+        });
+        if (list.length > 0) {
+          allGenerators.value = list;
+          isLoading.value = false;
+          return;
+        }
+      }
+    }
+  } catch (e) {}
+
   allGenerators.value = [
-    { id: 'gen_101', name: 'G-Force 1 (Site A)' },
-    { id: 'gen_102', name: 'Powerhouse X (Site B)' },
-    { id: 'gen_103', name: 'Voltron-5000 (Site A)' },
-    { id: 'gen_104', name: 'MegaWatt Prime (Site C)' },
-    { id: 'gen_105', name: 'Silent Runner (Site B)' },
-    { id: 'gen_106', name: 'Desert King (Site D)' },
+    { id: '63', name: 'EG 01 (30 KVA) (PMVE)' },
+    { id: '68', name: 'EG 105 (150 KVA) (PMVE)' },
+    { id: '18', name: 'EG 147 (60 KVA) (PMVE)' },
+    { id: '135', name: 'EG 172 (150 KVA) (PMVE)' },
+    { id: '199', name: 'EG 197 (200 KVA) (J#327)' },
+    { id: '173', name: 'EG 262 (20 KVA) (J#327)' },
   ];
   isLoading.value = false;
 };

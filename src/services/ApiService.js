@@ -82,12 +82,14 @@ const fetchData = async (controller, command, params = {}) => {
     .catch(async error => {
       console.error(`Error fetching ${command}:`, error.response?.status, error.response?.data || error.message);
       if (error.response && error.response.status === 401) {
-        console.warn('Authentication token expired or invalid (401). Redirecting to login.');
-        globalToken = '';
-        await storage.clear();
-        import('@/router/index').then(({ default: router }) => {
-          router.replace('/login');
-        }).catch(err => console.error('Router navigation error on 401:', err));
+        console.warn('Authentication token expired or invalid (401) for ' + command);
+        if (command !== 'dashboard_detail' && command !== 'generator_detail') {
+          globalToken = '';
+          await storage.clear();
+          import('@/router/index').then(({ default: router }) => {
+            router.replace('/login');
+          }).catch(err => console.error('Router navigation error on 401:', err));
+        }
       }
       throw error;
     });
@@ -139,7 +141,7 @@ const getDashboardDetail = (params = {}) => {
  * Body: { gen_id: number }
  */
 const getGeneratorDetail = (genId) => {
-  return fetchData(Constants.CONT.Mobile_Contro, Constants.CMD.GENERATOR_DETAIL || 'generator_detail', { gen_id: Number(genId) });
+  return fetchData(Constants.CONT.Mobile_Contro, Constants.CMD.GENERATOR_DETAIL || 'generator_detail', { gen_id: Number(genId), id: Number(genId) });
 };
 
 /**

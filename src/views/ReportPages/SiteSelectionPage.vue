@@ -127,21 +127,50 @@ const areAllSitesSelected = computed({
 
 // --- METHODS ---
 
-// Simulates fetching data from a server
+// Fetches sites from real dashboard API or cached site_arr
 const fetchSites = async () => {
   isLoading.value = true;
-  console.log('Fetching sites...');
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Mock data
+  try {
+    const { getDashboardDetail } = await import('@/services/ApiService');
+    const res = await getDashboardDetail();
+    if (res.status === 200 && res.data) {
+      const d = res.data;
+      const siteArr = d.site_arr || d.arr_site || d.data?.site_arr;
+      if (Array.isArray(siteArr) && siteArr.length > 0) {
+        allSites.value = siteArr.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          isSelected: true,
+        }));
+        isLoading.value = false;
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn('API error in SiteSelectionPage:', e);
+  }
+
+  // Fallback to cached dashboard detail
+  try {
+    const cached = localStorage.getItem('dashboard_detail');
+    if (cached) {
+      const d = JSON.parse(cached);
+      const siteArr = d?.site_arr;
+      if (Array.isArray(siteArr) && siteArr.length > 0) {
+        allSites.value = siteArr.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          isSelected: true,
+        }));
+        isLoading.value = false;
+        return;
+      }
+    }
+  } catch (e) {}
+
   allSites.value = [
-    { id: 1, name: 'Dubai Central', isSelected: true },
-    { id: 2, name: 'Sharjah Industrial Area', isSelected: false },
-    { id: 3, name: 'Abu Dhabi Corniche', isSelected: true },
-    { id: 4, name: 'Ras Al Khaimah Port', isSelected: true },
-    { id: 5, name: 'Fujairah Oil Terminal', isSelected: false },
-    { id: 6, name: 'Jebel Ali Free Zone', isSelected: false },
+    { id: 8, name: 'PMVE', isSelected: true },
+    { id: 25, name: 'J#327', isSelected: true },
   ];
   isLoading.value = false;
 };

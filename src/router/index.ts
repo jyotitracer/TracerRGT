@@ -62,7 +62,8 @@ const routes: Array<RouteRecordRaw> = [
     ]
   },
   {
-    path: '/helpscreen',
+    path: '/helpscreen/:pageid?',
+    name: 'Helpscreen',
     component: HelpscreenPage,
   },
   {
@@ -123,8 +124,8 @@ const router = createRouter({
 
 // Authentication session guard
 router.beforeEach(async (to, from, next) => {
-  const publicPages = ['/splash', '/login', '/helpscreen'];
-  const isAuthRequired = !publicPages.some(page => to.path === page);
+  const publicPages = ['/splash', '/login'];
+  const isAuthRequired = !publicPages.some(page => to.path === page) && !to.path.startsWith('/helpscreen');
 
   try {
     const isLoginAlready = (await storage.get('IsLoginAlready')) || (await storage.get('RIsLoginAlready'));

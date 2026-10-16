@@ -80,7 +80,7 @@ import { Network } from '@capacitor/network';
 import { showToast } from '@/services/toast'; // Import the toast utility function
 
 const goToHelpScreen = () => {
-  router.push('/helpscreen');
+  router.push('/helpscreen/2');
 };
 
 const goToSharePage = async () => {
