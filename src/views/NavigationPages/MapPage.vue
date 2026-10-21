@@ -111,7 +111,7 @@ import { Share } from '@capacitor/share';
 import Constants from '@/common/constants';
 import axios from 'axios';
 import { createApp,onMounted,ref,onUnmounted,computed } from 'vue';
-import { Loader } from "@googlemaps/js-api-loader";
+import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import {
   homeOutline,
   filterCircle,
@@ -382,13 +382,25 @@ const initGoogleMap = async () => {
   const storedMapType = localStorage.getItem('groupmapType') || 'roadmap';
 
   try {
-    const loader = new Loader({
-      apiKey: Constants.Google_map_API,
-      version: "weekly",
-      libraries: ['geometry', 'places']
-    });
+    if (!window.google?.maps) {
+      const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || Constants.Google_map_API;
+      setOptions({
+        apiKey: apiKey,
+        version: "weekly",
+      });
 
-    await loader.load();
+      await importLibrary("maps");
+      try {
+        await importLibrary("marker");
+      } catch (err) {
+        // Optional library
+      }
+      try {
+        await importLibrary("geometry");
+      } catch (err) {
+        // Optional library
+      }
+    }
     console.log('Google Maps API successfully loaded');
 
     if (!mapRef.value && mapContainer.value) {

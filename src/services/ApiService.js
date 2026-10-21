@@ -80,10 +80,15 @@ const fetchData = async (controller, command, params = {}) => {
       return response;
     })
     .catch(async error => {
-      console.error(`Error fetching ${command}:`, error.response?.status, error.response?.data || error.message);
+      const isExpectedError = command === 'parameter_list' || command === 'notification_list';
+      if (isExpectedError) {
+        console.warn(`API Notice: ${command} returned ${error.response?.status || 'network error'}, using fallback.`);
+      } else {
+        console.error(`Error fetching ${command}:`, error.response?.status, error.response?.data || error.message);
+      }
       if (error.response && error.response.status === 401) {
         console.warn('Authentication token expired or invalid (401) for ' + command);
-        if (command !== 'dashboard_detail' && command !== 'generator_detail') {
+        if (command !== 'dashboard_detail' && command !== 'generator_detail' && command !== 'parameter_list') {
           globalToken = '';
           await storage.clear();
           import('@/router/index').then(({ default: router }) => {
@@ -159,7 +164,11 @@ const getNotificationList = (recId = 0) => {
  * Body: {}
  */
 const getParameterList = (params = {}) => {
-  return fetchData(Constants.CONT.Mobile_Contro, Constants.CMD.PARAMETER_LIST || 'parameter_list', params);
+  return fetchData(Constants.CONT.Mobile_Contro, Constants.CMD.PARAMETER_LIST || 'parameter_list', params)
+    .catch(err => {
+      console.warn('Backend parameter_list unavailable or returned 500, using client catalog:', err.message);
+      return { status: 200, data: { arr_data: [] } };
+    });
 };
 
 /**
