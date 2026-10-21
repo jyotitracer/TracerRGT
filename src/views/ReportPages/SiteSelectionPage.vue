@@ -3,44 +3,49 @@
     <ion-header>
       <ion-toolbar class="custom-toolbar">
         <ion-buttons slot="start">
-          <ion-back-button default-href="/event-report"></ion-back-button>
+          <ion-back-button default-href="/tabs/tab3" @click="goBack"></ion-back-button>
         </ion-buttons>
         <ion-title>Select Sites</ion-title>
+        <ion-buttons slot="end">
+          <ion-button @click="applyAndGoBack" class="done-btn">Done</ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
     <ion-content :fullscreen="true" class="page-background">
-      <!-- Pull-to-refresh container, equivalent to SwipeRefreshLayout -->
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh">
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
 
-      <!-- Main content card, equivalent to the outer-most brownishGrey LinearLayout -->
       <div class="content-card">
-
         <!-- Filter bar with search and the "All" toggle -->
         <div class="filter-bar">
           <ion-searchbar
             class="custom-searchbar"
             v-model="searchQuery"
-            placeholder="Search..."
+            placeholder="Search Sites..."
           ></ion-searchbar>
-          <ion-toggle
-            v-model="areAllSitesSelected"
-            :checked="areAllSitesSelected"
-            mode="ios"
-          ></ion-toggle>
+          <div class="all-toggle-wrap">
+            <span class="all-label">ALL</span>
+            <ion-toggle
+              :checked="areAllSitesSelected"
+              @ionChange="handleToggleAll($event)"
+              mode="ios"
+              class="header-toggle"
+            ></ion-toggle>
+          </div>
         </div>
 
-        <!-- The list of sites, equivalent to RecyclerView -->
-        <!-- It's only shown if not loading and if there are sites to show -->
+        <!-- The list of sites -->
         <ion-list v-if="!isLoading && filteredSites.length > 0" class="site-list">
-          <ion-item v-for="site in filteredSites" :key="site.id" lines="full">
-            <ion-label>{{ site.name }}</ion-label>
+          <ion-item v-for="site in filteredSites" :key="site.id" lines="full" class="site-item">
+            <ion-label class="site-label">{{ site.name }}</ion-label>
             <ion-toggle
               slot="end"
-              v-model="site.isSelected"
+              :checked="site.isSelected"
+              @ionChange="handleToggleSite(site, $event)"
               mode="ios"
+              class="item-toggle"
             ></ion-toggle>
           </ion-item>
         </ion-list>
@@ -50,11 +55,10 @@
           <ion-spinner name="crescent"></ion-spinner>
         </div>
 
-        <!-- "No Data" message, equivalent to txt_noDataSite -->
+        <!-- No Data message -->
         <div v-if="!isLoading && filteredSites.length === 0" class="status-container no-data-message">
-          <p>Data not available</p>
+          <p>No sites available</p>
         </div>
-
       </div>
     </ion-content>
   </ion-page>
@@ -62,6 +66,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   IonPage,
   IonHeader,
@@ -70,6 +75,7 @@ import {
   IonContent,
   IonButtons,
   IonBackButton,
+  IonButton,
   IonSearchbar,
   IonToggle,
   IonList,
@@ -80,25 +86,17 @@ import {
   IonRefresherContent,
 } from '@ionic/vue';
 
-// Define the structure for a single site
 interface Site {
-  id: number;
+  id: number | string;
   name: string;
   isSelected: boolean;
 }
 
-// --- STATE MANAGEMENT ---
-
+const router = useRouter();
 const isLoading = ref(false);
 const searchQuery = ref('');
-
-// Master list of all sites, fetched from an "API"
 const allSites = ref<Site[]>([]);
 
-// --- COMPUTED PROPERTIES ---
-
-// This computed property reactively filters the list based on the search query.
-// This is the Vue equivalent of implementing a search filter on a RecyclerView adapter.
 const filteredSites = computed(() => {
   if (!searchQuery.value) {
     return allSites.value;
@@ -108,42 +106,58 @@ const filteredSites = computed(() => {
   );
 });
 
-// A two-way computed property to manage the "Select All" toggle.
-const areAllSitesSelected = computed({
-  // `get` determines the toggle's state: true if all filtered sites are selected.
-  get() {
-    if (filteredSites.value.length === 0) return false;
-    return filteredSites.value.every(site => site.isSelected);
-  },
-  // `set` is called when the user clicks the "All" toggle.
-  // It updates the `isSelected` state of all currently visible (filtered) sites.
-  set(newValue: boolean) {
-    filteredSites.value.forEach(site => {
-      site.isSelected = newValue;
-    });
-  },
+const areAllSitesSelected = computed(() => {
+  if (filteredSites.value.length === 0) return false;
+  return filteredSites.value.every(site => site.isSelected);
 });
 
+const saveSelectedSites = () => {
+  const selected = allSites.value.filter(s => s.isSelected);
+  try {
+    localStorage.setItem('selected_report_sites', JSON.stringify(selected));
+  } catch (e) {
+    console.error('Failed to save selected sites:', e);
+  }
+};
 
-// --- METHODS ---
+const handleToggleAll = (event: CustomEvent) => {
+  const checked = Boolean(event.detail.checked);
+  filteredSites.value.forEach(site => {
+    site.isSelected = checked;
+  });
+  saveSelectedSites();
+};
 
-// Fetches sites from real dashboard API or cached site_arr
+const handleToggleSite = (site: Site, event: CustomEvent) => {
+  site.isSelected = Boolean(event.detail.checked);
+  saveSelectedSites();
+};
+
 const fetchSites = async () => {
   isLoading.value = true;
+  let siteList: any[] = [];
+
+  // Check saved selections
+  let savedIds: (string | number)[] | null = null;
+  try {
+    const saved = localStorage.getItem('selected_report_sites');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        savedIds = parsed.map((s: any) => s.id);
+      }
+    }
+  } catch (e) {}
+
+  // Fetch real sites from dashboard API
   try {
     const { getDashboardDetail } = await import('@/services/ApiService');
     const res = await getDashboardDetail();
     if (res.status === 200 && res.data) {
       const d = res.data;
-      const siteArr = d.site_arr || d.arr_site || d.data?.site_arr;
-      if (Array.isArray(siteArr) && siteArr.length > 0) {
-        allSites.value = siteArr.map((s: any) => ({
-          id: s.id,
-          name: s.name,
-          isSelected: true,
-        }));
-        isLoading.value = false;
-        return;
+      const apiArr = d.site_arr || d.arr_site || d.data?.site_arr;
+      if (Array.isArray(apiArr) && apiArr.length > 0) {
+        siteList = apiArr;
       }
     }
   } catch (e) {
@@ -151,118 +165,158 @@ const fetchSites = async () => {
   }
 
   // Fallback to cached dashboard detail
-  try {
-    const cached = localStorage.getItem('dashboard_detail');
-    if (cached) {
-      const d = JSON.parse(cached);
-      const siteArr = d?.site_arr;
-      if (Array.isArray(siteArr) && siteArr.length > 0) {
-        allSites.value = siteArr.map((s: any) => ({
-          id: s.id,
-          name: s.name,
-          isSelected: true,
-        }));
-        isLoading.value = false;
-        return;
+  if (siteList.length === 0) {
+    try {
+      const cached = localStorage.getItem('dashboard_detail');
+      if (cached) {
+        const d = JSON.parse(cached);
+        const cachedArr = d?.site_arr;
+        if (Array.isArray(cachedArr) && cachedArr.length > 0) {
+          siteList = cachedArr;
+        }
       }
-    }
-  } catch (e) {}
+    } catch (e) {}
+  }
 
-  allSites.value = [
-    { id: 8, name: 'PMVE', isSelected: true },
-    { id: 25, name: 'J#327', isSelected: true },
-  ];
+  // Default fallback sites if needed
+  if (siteList.length === 0) {
+    siteList = [
+      { id: 23, name: 'Site 23 - Dubai Industrial' },
+      { id: 8, name: 'Site 8 - PMVE Station' },
+      { id: 9, name: 'Site 9 - J#327 Plant' },
+    ];
+  }
+
+  allSites.value = siteList.map((s: any) => {
+    const id = s.id || s.site_id;
+    const name = s.name || s.site_name || `Site ${id}`;
+    const isSelected = savedIds !== null ? savedIds.includes(id) : true;
+    return { id, name, isSelected };
+  });
+
+  saveSelectedSites();
   isLoading.value = false;
 };
 
-// This is the handler for the "pull-to-refresh" action
 const handleRefresh = async (event: CustomEvent) => {
   await fetchSites();
-  // Let the refresher know that the fetching is complete
   (event.target as HTMLIonRefresherElement).complete();
 };
 
-// --- LIFECYCLE HOOK ---
+const applyAndGoBack = () => {
+  saveSelectedSites();
+  router.back();
+};
 
-// Fetch initial data when the component is first mounted
+const goBack = () => {
+  saveSelectedSites();
+  router.back();
+};
+
 onMounted(() => {
   fetchSites();
 });
-
 </script>
 
 <style scoped>
-/* Corresponds to the root layout's background color */
 .page-background {
-  --background: #33312e; /* purplishGrey */
+  --background: #3c3a37;
+  color: #ffffff;
 }
 
 .custom-toolbar {
-  --background: #43403a;
-  --color: #f0ad4e; /* paleSalmon */
+  --background: #32302e;
+  --color: #fdcf9f;
+  font-weight: 600;
 }
 
-/* Corresponds to the main container with margins and background */
+.done-btn {
+  --color: #f59c20;
+  font-weight: 700;
+  font-size: 14px;
+}
+
 .content-card {
-  background-color: #43403a; /* brownishGrey */
-  margin: 15px;
-  border-radius: 8px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
+  padding: 12px;
 }
 
-/* Corresponds to the horizontal layout with search and switch */
 .filter-bar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 10px 10px 10px;
+  justify-content: space-between;
+  gap: 12px;
+  background-color: #2b2826;
+  border-radius: 8px;
+  padding: 4px 10px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .custom-searchbar {
-  --background: #5a5650; /* map_filter_search_bg */
-  --color: #f0ad4e; /* paleSalmon text color */
-  --placeholder-color: #a0998e;
-  --icon-color: #f0ad4e;
-  --border-radius: 8px;
-  --box-shadow: none;
+  --background: transparent;
+  --color: #ffffff;
+  --placeholder-color: #a8a095;
+  --icon-color: #fdcf9f;
+  --clear-button-color: #fdcf9f;
   padding: 0;
-  height: 40px;
-  flex-grow: 1; /* Search bar takes available space */
+  flex: 1;
 }
 
-/* Style for the ON/OFF toggle */
-ion-toggle {
-  --handle-background: #fff;
-  --handle-background-checked: #fff;
-  --background: #888;
-  --background-checked: #72b87c; /* A nice green for ON state */
-  height: 25px;
-  width: 45px;
+.all-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.all-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fdcf9f;
+  letter-spacing: 0.5px;
+}
+
+.header-toggle {
+  --track-background: #484542;
+  --track-background-checked: #f59c20;
+  --handle-background-checked: #ffffff;
 }
 
 .site-list {
   background: transparent;
-  padding: 5px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-ion-item {
-  --background: transparent;
-  --color: #d3c8b4; /* pinkishGrey text color */
-  --border-color: #5a5650;
+.site-item {
+  --background: #343230;
+  --color: #ffffff;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --padding-start: 14px;
+  --inner-padding-end: 14px;
 }
 
-/* Container for status messages like spinner or "No Data" */
+.site-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.item-toggle {
+  --track-background: #484542;
+  --track-background-checked: #2dd36f;
+  --handle-background-checked: #ffffff;
+}
+
 .status-container {
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 40px;
+  padding: 40px 10px;
 }
+
 .no-data-message p {
-  color: #f0ad4e; /* paleSalmon */
-  font-size: 18px;
-  font-family: 'Roboto', sans-serif;
+  color: #a8a095;
+  font-size: 15px;
 }
 </style>

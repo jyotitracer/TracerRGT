@@ -3,19 +3,15 @@
     <ion-header>
       <ion-toolbar class="custom-toolbar">
         <ion-buttons slot="start">
-          <!-- This button takes the user back to the previous page -->
-          <ion-back-button default-href="/event-report"></ion-back-button>
+          <ion-back-button default-href="/tabs/tab3" @click="goBack"></ion-back-button>
         </ion-buttons>
         <ion-title>Select Generator</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content :fullscreen="true" class="page-background">
-      <!-- Main content card, equivalent to the brownishGrey LinearLayout -->
       <div class="content-card">
-
-        <!-- Filter bar with just the search input -->
-        <!-- The Switch is gone, so the ion-toggle is omitted -->
+        <!-- Filter bar with search -->
         <div class="filter-bar">
           <ion-searchbar
             class="custom-searchbar"
@@ -25,22 +21,24 @@
           ></ion-searchbar>
         </div>
 
-        <!-- The list of generators, equivalent to RecyclerView -->
-        <!-- This list is single-selection. Each item is a button. -->
+        <!-- The list of generators -->
         <ion-list v-if="!isLoading && filteredGenerators.length > 0" class="generator-list">
           <ion-item
             v-for="generator in filteredGenerators"
             :key="generator.id"
             button
             lines="full"
+            class="generator-item"
             @click="handleSelection(generator)"
           >
-            <ion-label>{{ generator.name }}</ion-label>
-            <!-- A subtle indicator for the currently selected item -->
+            <div class="gen-item-content">
+              <span class="gen-name">{{ generator.name }}</span>
+              <span v-if="generator.siteName" class="gen-sub">{{ generator.siteName }}</span>
+            </div>
             <ion-icon
-              v-if="selectedGeneratorId === generator.id"
-              :icon="checkmark"
-              color="success"
+              v-if="String(selectedGeneratorId) === String(generator.id)"
+              :icon="checkmarkCircle"
+              class="selected-check-icon"
               slot="end"
             ></ion-icon>
           </ion-item>
@@ -51,9 +49,9 @@
           <ion-spinner name="crescent"></ion-spinner>
         </div>
         
-        <!-- "No Data" message, equivalent to txt_noDataSite -->
+        <!-- No Data message -->
         <div v-if="!isLoading && filteredGenerators.length === 0" class="status-container no-data-message">
-          <p>Data not available</p>
+          <p>No generators available</p>
         </div>
       </div>
     </ion-content>
@@ -74,207 +72,212 @@ import {
   IonSearchbar,
   IonList,
   IonItem,
-  IonLabel,
   IonSpinner,
   IonIcon,
 } from '@ionic/vue';
-import { checkmark } from 'ionicons/icons';
+import { checkmarkCircle } from 'ionicons/icons';
 
-// In a real app, you would use a state management solution (like Pinia)
-// to share the selected generator between pages.
-// For this example, we'll just log it and navigate back.
-const selectedGeneratorId = ref('gen_102'); // Mock pre-selected ID
-
-// Define the structure for a single generator
 interface Generator {
-  id: string;
+  id: string | number;
   name: string;
+  siteName?: string;
+  capacity?: string;
 }
-
-// --- STATE MANAGEMENT ---
 
 const router = useRouter();
 const isLoading = ref(false);
 const searchQuery = ref('');
-
-// Master list of all generators
+const selectedGeneratorId = ref<string | number>('all');
 const allGenerators = ref<Generator[]>([]);
 
-// --- COMPUTED PROPERTIES ---
-
-// Reactively filters the list based on the search query
 const filteredGenerators = computed(() => {
   if (!searchQuery.value) {
     return allGenerators.value;
   }
+  const query = searchQuery.value.toLowerCase();
   return allGenerators.value.filter(gen =>
-    gen.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    gen.name.toLowerCase().includes(query) || (gen.siteName && gen.siteName.toLowerCase().includes(query))
   );
 });
 
-
-// --- METHODS ---
-
-// Fetches real generator data from dashboard API or cached site_arr
 const fetchGenerators = async () => {
   isLoading.value = true;
+
+  // Read saved selection
+  try {
+    const saved = localStorage.getItem('selected_report_generator');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.id !== undefined) {
+        selectedGeneratorId.value = parsed.id;
+      }
+    }
+  } catch (e) {}
+
+  let siteArr: any[] = [];
+
+  // Query real API
   try {
     const { getDashboardDetail } = await import('@/services/ApiService');
     const res = await getDashboardDetail();
     if (res.status === 200 && res.data) {
       const d = res.data;
-      const siteArr = d.site_arr || d.arr_site || d.data?.site_arr;
-      if (Array.isArray(siteArr) && siteArr.length > 0) {
-        const list: Generator[] = [];
-        siteArr.forEach((s: any) => {
-          if (Array.isArray(s.gen_arr)) {
-            s.gen_arr.forEach((g: any) => {
-              list.push({
-                id: String(g.id),
-                name: `${g.name} (${s.name})`,
-              });
-            });
-          }
-        });
-        if (list.length > 0) {
-          allGenerators.value = list;
-          isLoading.value = false;
-          return;
-        }
+      const apiArr = d.site_arr || d.arr_site || d.data?.site_arr;
+      if (Array.isArray(apiArr) && apiArr.length > 0) {
+        siteArr = apiArr;
       }
     }
   } catch (e) {
     console.warn('API error in GeneratorSelectionPage:', e);
   }
 
-  // Fallback to cached dashboard detail
-  try {
-    const cached = localStorage.getItem('dashboard_detail');
-    if (cached) {
-      const d = JSON.parse(cached);
-      const siteArr = d?.site_arr;
-      if (Array.isArray(siteArr) && siteArr.length > 0) {
-        const list: Generator[] = [];
-        siteArr.forEach((s: any) => {
-          if (Array.isArray(s.gen_arr)) {
-            s.gen_arr.forEach((g: any) => {
-              list.push({
-                id: String(g.id),
-                name: `${g.name} (${s.name})`,
-              });
-            });
-          }
-        });
-        if (list.length > 0) {
-          allGenerators.value = list;
-          isLoading.value = false;
-          return;
+  // Fallback to cache
+  if (siteArr.length === 0) {
+    try {
+      const cached = localStorage.getItem('dashboard_detail');
+      if (cached) {
+        const d = JSON.parse(cached);
+        if (Array.isArray(d?.site_arr) && d.site_arr.length > 0) {
+          siteArr = d.site_arr;
         }
       }
-    }
-  } catch (e) {}
+    } catch (e) {}
+  }
 
-  allGenerators.value = [
-    { id: '63', name: 'EG 01 (30 KVA) (PMVE)' },
-    { id: '68', name: 'EG 105 (150 KVA) (PMVE)' },
-    { id: '18', name: 'EG 147 (60 KVA) (PMVE)' },
-    { id: '135', name: 'EG 172 (150 KVA) (PMVE)' },
-    { id: '199', name: 'EG 197 (200 KVA) (J#327)' },
-    { id: '173', name: 'EG 262 (20 KVA) (J#327)' },
+  const list: Generator[] = [
+    { id: 'all', name: 'All Generators', siteName: 'Fleet overview' }
   ];
+
+  if (siteArr.length > 0) {
+    siteArr.forEach((s: any) => {
+      const sName = s.name || s.site_name || '';
+      if (Array.isArray(s.gen_arr)) {
+        s.gen_arr.forEach((g: any) => {
+          const gId = g.id || g.gen_id;
+          const gName = g.name || g.gen_name || `EG ${gId}`;
+          const cap = g.capacity || g.model || '';
+          list.push({
+            id: gId,
+            name: cap ? `${gName} (${cap})` : gName,
+            siteName: sName,
+            capacity: cap,
+          });
+        });
+      }
+    });
+  } else {
+    list.push(
+      { id: '181', name: 'EG 181 (60 KVA)', siteName: 'Site 23 - Dubai Industrial' },
+      { id: '86', name: 'EG 86 (500 KVA)', siteName: 'Site 23 - Dubai Industrial' },
+      { id: '75', name: 'EG 75 (250 KVA)', siteName: 'Site 8 - PMVE Station' },
+      { id: '105', name: 'EG 105 (150 KVA)', siteName: 'Site 8 - PMVE Station' },
+      { id: '197', name: 'EG 197 (200 KVA)', siteName: 'Site 9 - J#327 Plant' },
+      { id: '262', name: 'EG 262 (20 KVA)', siteName: 'Site 9 - J#327 Plant' },
+    );
+  }
+
+  allGenerators.value = list;
   isLoading.value = false;
 };
 
-// Handles the user's selection
 const handleSelection = (generator: Generator) => {
-  console.log('Selected Generator:', generator);
-  
-  // In a real app, you'd update your central state store here.
-  // For example: `store.setSelectedGenerator(generator);`
   selectedGeneratorId.value = generator.id;
-
-  // Navigate back to the previous page after selection
+  try {
+    localStorage.setItem('selected_report_generator', JSON.stringify(generator));
+  } catch (e) {
+    console.error('Failed to save selected generator:', e);
+  }
   router.back();
 };
 
-// --- LIFECYCLE HOOK ---
+const goBack = () => {
+  router.back();
+};
 
 onMounted(() => {
   fetchGenerators();
 });
-
 </script>
 
 <style scoped>
-/* Basic page and toolbar styling */
 .page-background {
-  --background: #33312e; /* purplishGrey */
+  --background: #3c3a37;
+  color: #ffffff;
 }
 
 .custom-toolbar {
-  --background: #43403a;
-  --color: #f0ad4e; /* paleSalmon */
+  --background: #32302e;
+  --color: #fdcf9f;
+  font-weight: 600;
 }
 
-/* Main content card styling */
 .content-card {
-  background-color: #43403a; /* brownishGrey */
-  margin: 15px;
-  border-radius: 8px;
-  min-height: calc(100% - 30px);
-  display: flex;
-  flex-direction: column;
+  padding: 12px;
 }
 
-/* Filter bar styling */
 .filter-bar {
-  padding: 15px 10px;
+  background-color: #2b2826;
+  border-radius: 8px;
+  padding: 4px 10px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .custom-searchbar {
-  --background: #5a5650; /* map_filter_search_bg */
-  --color: #f0ad4e;
-  --placeholder-color: #a0998e;
-  --icon-color: #f0ad4e;
-  --border-radius: 8px;
-  --box-shadow: none;
+  --background: transparent;
+  --color: #ffffff;
+  --placeholder-color: #a8a095;
+  --icon-color: #fdcf9f;
+  --clear-button-color: #fdcf9f;
   padding: 0;
-  height: 40px;
 }
 
-/* List and item styling */
 .generator-list {
   background: transparent;
-  padding: 5px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-ion-item {
-  --background: transparent;
-  --color: #d3c8b4;
-  --border-color: #5a5650;
-  --detail-icon-color: #d3c8b4; /* Color for the button arrow */
-  --ripple-color: #5a5650;
+.generator-item {
+  --background: #343230;
+  --color: #ffffff;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --padding-start: 14px;
+  --inner-padding-end: 14px;
 }
 
-ion-item::part(native) {
-  cursor: pointer;
+.gen-item-content {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
 }
 
-/* Status messages (loading/no data) styling */
+.gen-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.gen-sub {
+  font-size: 12px;
+  color: #c4b9a9;
+  margin-top: 2px;
+}
+
+.selected-check-icon {
+  font-size: 22px;
+  color: #2dd36f;
+}
+
 .status-container {
-  flex-grow: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
-}
-.no-data-message p {
-  color: #f0ad4e;
-  font-size: 18px;
-  font-family: 'Roboto', sans-serif;
+  padding: 40px 10px;
 }
 
-ion-spinner {
-  width: 32px;
-  height: 32px;
+.no-data-message p {
+  color: #a8a095;
+  font-size: 15px;
 }
 </style>

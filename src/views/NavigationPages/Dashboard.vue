@@ -88,11 +88,15 @@
                 :class="{ active: gen.isActive }"
                 @click="selectGenerator(gen)"
               >
-                <ion-icon
-                  class="gen-box-icon"
-                  :icon="gen.icon"
-                  :color="isGenRunning(gen) ? 'success' : (gen.isActive ? 'primary' : 'secondary')"
-                ></ion-icon>
+                <div class="gen-thumb-wrap">
+                  <img
+                    :src="gen.image || gen.img || gen.gen_image || '/generator_default.jpg'"
+                    :alt="gen.name"
+                    class="gen-item-thumb"
+                    @error="onGenDetailImgError"
+                  />
+                  <span class="gen-thumb-status-dot" :class="isGenRunning(gen) ? 'dot-on' : 'dot-off'"></span>
+                </div>
                 <div class="gen-details">
                   <strong class="gen-name-text">{{ gen.name }}</strong>
                   <span class="gen-status-text" :class="statusClass(gen)">{{ formatGenStatus(gen) }}</span>
@@ -115,20 +119,35 @@
         <!-- SECTION 3: Generator Details (shown after generator click)    -->
         <!-- ═══════════════════════════════════════════════════════════════ -->
         <div class="section-block details-section" v-if="selectedGenerator">
-          <!-- Info Card -->
+          <!-- Info Card with Generator Image -->
           <ion-card class="info-card">
             <ion-card-content class="info_card_content">
-              <p class="heading_class">{{ selectedGenerator.name }}</p>
-              <p class="descri1_class">{{ selectedGenerator.capacity || selectedGenerator.model || '—' }}</p>
-              <p class="descri2_class">{{ selectedGenerator.desc || selectedGenerator.model || selectedGenerator.capacity || '—' }}</p>
-              <div class="status-line">
-                <p><ion-icon :icon="locationOutline"></ion-icon> {{ selectedGenerator.location || selectedGenerator.loc || '—' }}</p>
-                <div>
-                  <div :class="isGenRunning(selectedGenerator) ? 'running-status' : 'offline-status'">
-                    {{ formatGenStatus(selectedGenerator) }}
+              <div class="gen-detail-header-flex">
+                <div class="gen-detail-info-col">
+                  <p class="heading_class">{{ selectedGenerator.name }}</p>
+                  <p class="descri1_class">{{ selectedGenerator.capacity || selectedGenerator.model || '—' }}</p>
+                  <p class="descri2_class">{{ selectedGenerator.desc || selectedGenerator.model || selectedGenerator.capacity || '—' }}</p>
+                  <div class="status-line">
+                    <p><ion-icon :icon="locationOutline"></ion-icon> {{ selectedGenerator.location || selectedGenerator.loc || '—' }}</p>
                   </div>
-                  <div class="last-updated">Last Updated - {{ selectedGenerator.lastUpdated || selectedGenerator.rtcdatetime || '—' }}</div>
                 </div>
+                <div class="gen-detail-img-col">
+                  <img
+                    :src="selectedGenerator.image || selectedGenerator.img || selectedGenerator.gen_image || '/generator_default.jpg'"
+                    :alt="selectedGenerator.name"
+                    class="gen-detail-photo"
+                    @error="onGenDetailImgError"
+                  />
+                  <div class="gen-img-badge" :class="isGenRunning(selectedGenerator) ? 'badge-running' : 'badge-stopped'">
+                    {{ isGenRunning(selectedGenerator) ? 'RUNNING' : 'STOPPED' }}
+                  </div>
+                </div>
+              </div>
+              <div class="status-footer-line">
+                <div :class="isGenRunning(selectedGenerator) ? 'running-status' : 'offline-status'">
+                  {{ formatGenStatus(selectedGenerator) }}
+                </div>
+                <div class="last-updated">Last Updated - {{ selectedGenerator.lastUpdated || selectedGenerator.rtcdatetime || '—' }}</div>
               </div>
             </ion-card-content>
           </ion-card>
@@ -683,6 +702,7 @@ const parseDashboardResponse = (d: any) => {
             eve_sts: g.eve_sts,
             color: isRunning ? '#68c521' : '#078dfc',
             icon: serverOutline,
+            image: g.image || g.img || g.gen_image || g.image_url || g.photo || '/generator_default.jpg',
             isActive: false,
           });
         });
@@ -759,6 +779,7 @@ const selectSite = (site: any) => {
         rtc_epoc: g.rtc_epoc,
         eve_sts: g.eve_sts,
         icon: serverOutline,
+        image: g.image || g.img || g.gen_image || g.image_url || g.photo || '/generator_default.jpg',
         isActive: false,
       }))
     : allGenerators.value.filter((g: any) => String(g.site_id) === String(site.id));
@@ -797,6 +818,7 @@ const selectGenerator = async (gen: any) => {
     capacity: gen.capacity || gen.model || '—',
     desc: gen.desc || gen.model || gen.capacity || '—',
     location: gen.location || gen.loc || '—',
+    image: gen.image || gen.img || gen.gen_image || '/generator_default.jpg',
     status: isRunning ? 'Generator ON' : 'Generator OFF',
     lastUpdated: gen.lastUpdated || gen.rtcdatetime || '—',
   };
@@ -827,6 +849,13 @@ const selectGenerator = async (gen: any) => {
     }
   } catch (err) {
     console.warn(`Live generator_detail request for gen ${gen.id} unavailable, using baseline telemetry:`, err);
+  }
+};
+
+const onGenDetailImgError = (event: Event) => {
+  const target = event.target as HTMLImageElement;
+  if (target && target.src && !target.src.endsWith('/generator_default.jpg')) {
+    target.src = '/generator_default.jpg';
   }
 };
 
@@ -1121,6 +1150,7 @@ const applyServerTelemetry = (raw: any, isRunning: boolean, ratedKw: number, rat
     if (d.capacity) selectedGenerator.value.capacity = d.capacity;
     if (d.loc || d.location) selectedGenerator.value.location = d.loc || d.location;
     if (d.rtcdatetime || d.last_updated) selectedGenerator.value.lastUpdated = d.rtcdatetime || d.last_updated;
+    if (d.image || d.img || d.gen_image || d.image_url) selectedGenerator.value.image = d.image || d.img || d.gen_image || d.image_url;
   }
 
   // 1. Power Total
@@ -1688,14 +1718,38 @@ ion-content {
   box-shadow: 0 0 8px rgba(245, 156, 32, 0.3);
 }
 
-/* Generator box icon decreased in size */
-.generator-item .gen-box-icon {
-  font-size: 1.3em;
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
+.gen-thumb-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
   margin-right: 8px;
   flex-shrink: 0;
+  background: #23211f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.gen-item-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.gen-thumb-status-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid #1c1a18;
+}
+.gen-thumb-status-dot.dot-on {
+  background-color: #2dd36f;
+  box-shadow: 0 0 4px #2dd36f;
+}
+.gen-thumb-status-dot.dot-off {
+  background-color: #92949c;
 }
 
 .generator-item .gen-details {
@@ -1753,6 +1807,52 @@ ion-content {
 .info_card_content {
   padding: 4px 0;
 }
+.gen-detail-header-flex {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.gen-detail-info-col {
+  flex: 1;
+  min-width: 0;
+}
+.gen-detail-img-col {
+  flex-shrink: 0;
+  width: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.gen-detail-photo {
+  width: 92px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 156, 32, 0.4);
+  background: #252321;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
+}
+.gen-img-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+  text-align: center;
+  width: 100%;
+}
+.gen-img-badge.badge-running {
+  background: rgba(45, 211, 111, 0.15);
+  color: #2dd36f;
+  border: 1px solid rgba(45, 211, 111, 0.4);
+}
+.gen-img-badge.badge-stopped {
+  background: rgba(245, 156, 32, 0.15);
+  color: #f59c20;
+  border: 1px solid rgba(245, 156, 32, 0.4);
+}
 .heading_class {
   font-size: 1.1em;
   font-weight: 700;
@@ -1785,25 +1885,30 @@ ion-content {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
+  margin-top: 4px;
+}
+.status-footer-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 .info-card .offline-status {
   color: var(--ion-color-primary);
   font-weight: bold;
   font-size: 0.78em;
-  text-align: right;
 }
 .info-card .running-status {
   color: #2dd36f;
   font-weight: bold;
   font-size: 0.78em;
-  text-align: right;
 }
 .info-card .last-updated {
   font-size: 0.68em;
   color: var(--ion-text-color);
   text-align: right;
-  margin-top: 2px;
 }
 
 /* ── Left Category Menu ── */

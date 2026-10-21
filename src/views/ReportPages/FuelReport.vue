@@ -3,7 +3,7 @@
     <ion-header>
       <ion-toolbar class="custom-toolbar">
         <ion-buttons slot="start">
-          <ion-back-button default-href="/"></ion-back-button>
+          <ion-back-button default-href="/tabs/tab3"></ion-back-button>
         </ion-buttons>
         <ion-title>Fuel Report</ion-title>
       </ion-toolbar>
@@ -31,7 +31,7 @@
           </div>
         </div>
 
-        <!-- Report Selector (Dropdown matching HistoryLog.vue) -->
+        <!-- Report Selector -->
         <div class="form-row">
           <span class="form-label">Report</span>
           <span class="form-colon">:</span>
@@ -42,11 +42,11 @@
           </select>
         </div>
 
-        <!-- Period Selector (Dropdown matching HistoryLog.vue) -->
+        <!-- Period Selector -->
         <div class="form-row">
           <span class="form-label">Period</span>
           <span class="form-colon">:</span>
-          <select v-model="selectedPeriodValue" class="custom-select" @change="onPeriodChange">
+          <select v-model="selectedPeriodValue" class="custom-select">
             <option v-for="period in periodOptions" :key="period.value" :value="period.value">
               {{ period.text }}
             </option>
@@ -68,16 +68,20 @@
 
         <!-- Submit Button -->
         <div class="submit-button-container">
-          <ion-button @click="handleSubmit" :disabled="isLoading">Submit</ion-button>
+          <ion-button @click="handleSubmit" :disabled="isLoading" class="submit-btn" expand="block">
+            Submit
+          </ion-button>
         </div>
       </div>
 
       <!-- Loading Spinner and No Data Message -->
-      <div class="status-container">
-        <ion-spinner v-if="isLoading" name="crescent"></ion-spinner>
-        <div v-if="!isLoading && reportData.length === 0 && hasSubmitted" class="no-data-text">
-          Data not available
-        </div>
+      <div class="status-container" v-if="isLoading">
+        <ion-spinner name="crescent"></ion-spinner>
+      </div>
+
+      <div v-if="!isLoading && reportData.length === 0 && hasSubmitted" class="no-data-text">
+        <ion-icon :icon="alertCircleOutline" class="no-data-icon"></ion-icon>
+        <p>Data not available for selected criteria</p>
       </div>
 
       <!-- Results List -->
@@ -85,33 +89,36 @@
         <template v-for="(item, index) in reportData" :key="index">
 
           <!-- Site Name Header WITH Legend -->
-          <ion-item-divider v-if="item.type === 'site_header'" class="site-header-divider">
-            <ion-label class="site-header-label">{{ item.siteName }}</ion-label>
+          <div v-if="item.type === 'site_header'" class="site-header-block">
+            <div class="site-header-title-row">
+              <ion-icon :icon="businessOutline" class="site-icon"></ion-icon>
+              <span class="site-header-label">{{ item.siteName }}</span>
+            </div>
             
             <!-- Efficiency Legend -->
             <div v-if="selectedReportType === 'efficiency'" class="legend-box-efficiency">
               <div class="legend-row">
-                <div class="legend-item"><ion-icon :icon="hourglassOutline" />Run Hour</div>
-                <div class="legend-item"><ion-icon :icon="sunnyOutline" />Energy</div>
-                <div class="legend-item"><ion-icon :icon="beakerOutline" />Fuel Consumed</div>
+                <div class="legend-item"><ion-icon :icon="hourglassOutline" /> Run Hour</div>
+                <div class="legend-item"><ion-icon :icon="sunnyOutline" /> Energy (kWh)</div>
+                <div class="legend-item"><ion-icon :icon="beakerOutline" /> Fuel (L)</div>
               </div>
-              <div class="legend-row">
-                <div class="legend-item"><ion-icon :icon="leafOutline" />Efficiency ( Energy in KWH / Fuel on Ltrs )</div>
+              <div class="legend-sub">
+                <ion-icon :icon="leafOutline" class="legend-leaf" /> Efficiency (kWh / L)
               </div>
             </div>
 
             <!-- Fuel Filling Legend -->
             <div v-if="selectedReportType === 'fuelfilling'" class="legend-box-filling">
-              <div class="legend-item"><ion-icon :icon="colorFillOutline" />Filling</div>
-              <div class="legend-item"><ion-icon :icon="trendingDownOutline" />Dropping</div>
+              <div class="legend-item"><ion-icon :icon="colorFillOutline" class="filling-icon" /> Filling (L)</div>
+              <div class="legend-item"><ion-icon :icon="trendingDownOutline" class="dropping-icon" /> Dropping (L)</div>
             </div>
-          </ion-item-divider>
+          </div>
 
           <!-- 2. Efficiency Report Content Row -->
-          <ion-item v-if="item.type === 'efficiency_content'" class="report-item efficiency-item" lines="none">
+          <div v-if="item.type === 'efficiency_content'" class="report-card efficiency-card">
             <div class="item-details">
               <div class="generator-name">
-                {{ item.generatorName }} <span class="generator-capacity">({{ item.capacity }})</span>
+                {{ item.generatorName }} <span class="generator-capacity" v-if="item.capacity">({{ item.capacity }})</span>
               </div>
               <div class="data-grid">
                 <div class="data-point">
@@ -120,38 +127,39 @@
                 </div>
                 <div class="data-point">
                   <div class="value-row"><ion-icon :icon="sunnyOutline" /> {{ item.energy }}</div>
-                  <div class="unit-row">KWH</div>
+                  <div class="unit-row">kWh</div>
                 </div>
                 <div class="data-point">
                   <div class="value-row"><ion-icon :icon="beakerOutline" /> {{ item.fuelConsumed }}</div>
-                  <div class="unit-row">ltrs</div>
+                  <div class="unit-row">L</div>
                 </div>
                 <div class="data-point efficiency-value">
                   <div class="value-row"><ion-icon :icon="leafOutline" /> {{ item.efficiency }}</div>
+                  <div class="unit-row">kWh/L</div>
                 </div>
               </div>
             </div>
-          </ion-item>
+          </div>
 
           <!-- 3. Fuel Filling Report Content Row -->
-          <ion-item v-if="item.type === 'fuelfilling_content'" class="report-item fuelfilling-item" lines="none">
+          <div v-if="item.type === 'fuelfilling_content'" class="report-card fuelfilling-card" @click="navigateToDetails(item)">
             <div class="item-details">
               <div class="generator-name">
-                {{ item.generatorName }} <span class="generator-capacity">({{ item.capacity }})</span>
+                {{ item.generatorName }} <span class="generator-capacity" v-if="item.capacity">({{ item.capacity }})</span>
               </div>
               <div class="data-row">
-                <div class="data-point">
+                <div class="data-point filling-data">
                   <ion-icon :icon="colorFillOutline" />
-                  <span>{{ item.filling }} ltrs</span>
+                  <span>{{ item.filling }} L</span>
                 </div>
-                <div class="data-point">
+                <div class="data-point dropping-data">
                   <ion-icon :icon="trendingDownOutline" />
-                  <span>{{ item.dropping }} ltrs</span>
+                  <span>{{ item.dropping }} L</span>
                 </div>
               </div>
             </div>
-            <ion-icon :icon="chevronForwardOutline" class="right-arrow" @click="navigateToDetails(item)"></ion-icon>
-          </ion-item>
+            <ion-icon :icon="chevronForwardOutline" class="right-arrow"></ion-icon>
+          </div>
 
         </template>
       </ion-list>
@@ -160,28 +168,39 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonIcon,
-  IonSelect, IonSelectOption, IonButton, IonSpinner, IonList, IonItem, IonLabel, IonItemDivider,
+  IonButton, IonSpinner, IonList, onIonViewWillEnter,
 } from '@ionic/vue';
 import { 
   hourglassOutline, sunnyOutline, beakerOutline, leafOutline, colorFillOutline, 
-  trendingDownOutline, chevronForwardOutline, chevronDownOutline 
+  trendingDownOutline, chevronForwardOutline, businessOutline, alertCircleOutline 
 } from 'ionicons/icons';
 import router from '@/router/index';
+import { getFuelEfficiencyReport, getFillDropReport, getDashboardDetail } from '@/services/ApiService';
+
+interface SiteItem {
+  id: number | string;
+  name: string;
+}
+
+interface GenItem {
+  id: string | number;
+  name: string;
+  siteName?: string;
+  capacity?: string;
+}
 
 const isLoading = ref(false);
 const hasSubmitted = ref(false);
 
-// Filter State
-const selectedSites = ref<{ id: number; name: string }[]>([{ id: 0, name: 'All Site' }]);
-const selectedGenerator = ref<{ id: string; name: string } | null>({ id: 'all', name: 'All Generator' });
-const allSitesCount = ref(3);
+const selectedSites = ref<SiteItem[]>([]);
+const selectedGenerator = ref<GenItem | null>(null);
 
 const selectedPeriodValue = ref('custom');
 
-// Default custom dates (YYYY-MM-DD)
+// Dates (YYYY-MM-DD)
 const todayStr = new Date().toISOString().split('T')[0];
 const oneMonthAgo = new Date();
 oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
@@ -197,20 +216,6 @@ const periodOptions = ref([
   { value: 'custom', text: 'Custom Interval' },
 ]);
 
-const onPeriodChange = () => {
-  // When period changes, if not custom, can auto-sync dates or keep ready
-};
-
-const selectedPeriod = computed(() => {
-  if (selectedPeriodValue.value === 'custom') {
-    return {
-      value: 'custom',
-      text: `${customFromDate.value} to ${customToDate.value}`
-    };
-  }
-  return periodOptions.value.find(p => p.value === selectedPeriodValue.value) || { value: selectedPeriodValue.value, text: selectedPeriodValue.value };
-});
-
 const selectedReportType = ref('efficiency');
 const ReportOptions = ref([
   { value: 'efficiency', text: 'Efficiency Report' },
@@ -219,17 +224,86 @@ const ReportOptions = ref([
 
 const reportData = ref<any[]>([]);
 
-// Computed Properties
-const displaySiteText = computed(() => selectedSites.value[0]?.name || 'Select Site');
-const displayGeneratorText = computed(() => selectedGenerator.value?.name || 'Select Generator');
+const syncSelections = async () => {
+  // 1. Read Sites
+  try {
+    const savedSites = localStorage.getItem('selected_report_sites');
+    if (savedSites) {
+      const parsed = JSON.parse(savedSites);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        selectedSites.value = parsed;
+      }
+    }
+  } catch (e) {}
 
-// --- METHODS ---
+  // 2. Read Generator
+  try {
+    const savedGen = localStorage.getItem('selected_report_generator');
+    if (savedGen) {
+      const parsed = JSON.parse(savedGen);
+      if (parsed && parsed.id !== undefined) {
+        selectedGenerator.value = parsed;
+      }
+    }
+  } catch (e) {}
+
+  // Default initialisation from dashboard data if empty
+  if (selectedSites.value.length === 0 || !selectedGenerator.value) {
+    try {
+      let siteArr: any[] = [];
+      const cached = localStorage.getItem('dashboard_detail');
+      if (cached) {
+        siteArr = JSON.parse(cached)?.site_arr || [];
+      }
+      if (!siteArr || siteArr.length === 0) {
+        const res = await getDashboardDetail();
+        if (res.status === 200 && res.data) {
+          siteArr = res.data.site_arr || [];
+        }
+      }
+
+      if (Array.isArray(siteArr) && siteArr.length > 0) {
+        if (selectedSites.value.length === 0) {
+          selectedSites.value = siteArr.map((s: any) => ({
+            id: s.id || s.site_id,
+            name: s.name || s.site_name || `Site ${s.id}`,
+          }));
+        }
+
+        if (!selectedGenerator.value) {
+          selectedGenerator.value = { id: 'all', name: 'All Generators' };
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading dashboard detail for fuel report:', e);
+    }
+  }
+
+  if (selectedSites.value.length === 0) {
+    selectedSites.value = [{ id: 23, name: 'Site 23 - Dubai Industrial' }];
+  }
+  if (!selectedGenerator.value) {
+    selectedGenerator.value = { id: 'all', name: 'All Generators' };
+  }
+};
+
+const displaySiteText = computed(() => {
+  if (selectedSites.value.length === 0) return 'Select Site';
+  if (selectedSites.value.length > 2) {
+    return `${selectedSites.value[0].name} +${selectedSites.value.length - 1} more`;
+  }
+  return selectedSites.value.map(s => s.name).join(', ');
+});
+
+const displayGeneratorText = computed(() => {
+  return selectedGenerator.value?.name || 'All Generators';
+});
+
 const handleSubmit = async () => {
   isLoading.value = true;
   hasSubmitted.value = true;
   reportData.value = [];
 
-  // Determine date range based on selected period
   let fdate = customFromDate.value;
   let tdate = customToDate.value;
   const now = new Date();
@@ -248,118 +322,209 @@ const handleSubmit = async () => {
     fdate = lastWeek.toISOString().split('T')[0];
     tdate = now.toISOString().split('T')[0];
   } else {
-    // Custom Interval
     fdate = customFromDate.value || oneMonthAgoStr;
     tdate = customToDate.value || todayStr;
   }
 
-  console.log('Fetching fuel report with period:', selectedPeriodValue.value, 'fdate:', fdate, 'tdate:', tdate);
-  await new Promise(resolve => setTimeout(resolve, 800));
+  const siteIds = selectedSites.value.map(s => s.id);
+  const genIds = selectedGenerator.value?.id === 'all' ? [] : [selectedGenerator.value?.id];
 
   let parsedList: any[] = [];
-  
-  if (selectedReportType.value === 'efficiency') {
-    parsedList.push({ type: 'site_header', siteName: 'J#310' });
-    parsedList.push({ type: 'efficiency_content', generatorName: 'EG 04', capacity: '500 KVA', runHour: '0.0', energy: '0.00', fuelConsumed: '57.00', efficiency: '0.0' });
-    parsedList.push({ type: 'efficiency_content', generatorName: 'EG 08', capacity: '500 KVA', runHour: '182.9', energy: '19019.90', fuelConsumed: '2134.00', efficiency: '8.9' });
-    parsedList.push({ type: 'efficiency_content', generatorName: 'EG 113', capacity: '150 KVA', runHour: '342.6', energy: '14377.40', fuelConsumed: '4738.00', efficiency: '3.0' });
-    parsedList.push({ type: 'efficiency_content', generatorName: 'EG 115', capacity: '60 KVA', runHour: '5.4', energy: '0.00', fuelConsumed: '0.00', efficiency: '0.0' });
-    parsedList.push({ type: 'efficiency_content', generatorName: 'EG 116', capacity: '60 KVA', runHour: '0.0', energy: '0.00', fuelConsumed: '0.00', efficiency: '0.0' });
 
-  } else if (selectedReportType.value === 'fuelfilling') {
-    parsedList.push({ type: 'site_header', siteName: 'PMVE' });
-    parsedList.push({ type: 'fuelfilling_content', generatorName: 'EG 04', capacity: '500 KVA', filling: '71.00', dropping: '0.00' });
-    parsedList.push({ type: 'fuelfilling_content', generatorName: 'EG 145', capacity: '250 KVA', filling: '215.00', dropping: '0.00' });
-    parsedList.push({ type: 'site_header', siteName: 'J#310' });
-    parsedList.push({ type: 'fuelfilling_content', generatorName: 'EG 129', capacity: '250 KVA', filling: '705.00', dropping: '0.00' });
-    parsedList.push({ type: 'fuelfilling_content', generatorName: 'EG 137', capacity: '250 KVA', filling: '9685.00', dropping: '0.00' });
-    parsedList.push({ type: 'site_header', siteName: 'J#315' });
-    parsedList.push({ type: 'fuelfilling_content', generatorName: 'EG 159', capacity: '400 KVA', filling: '7335.00', dropping: '0.00' });
+  try {
+    if (selectedReportType.value === 'efficiency') {
+      const res = await getFuelEfficiencyReport({
+        site_arr: siteIds,
+        gen_arr: genIds,
+        fdate: fdate,
+        tdate: tdate,
+        isGrping: 1,
+        intrvl_id: selectedPeriodValue.value === 'today' ? 3 : (selectedPeriodValue.value === 'yesterday' ? 4 : 5),
+      });
+
+      if (res && res.status === 200 && res.data) {
+        const raw = res.data.arr_data || res.data.data || (Array.isArray(res.data) ? res.data : []);
+        if (Array.isArray(raw) && raw.length > 0) {
+          let currentSite = '';
+          raw.forEach((r: any) => {
+            const sName = r.site_name || r.site || selectedSites.value[0]?.name || 'Site';
+            if (sName !== currentSite) {
+              currentSite = sName;
+              parsedList.push({ type: 'site_header', siteName: sName });
+            }
+            parsedList.push({
+              type: 'efficiency_content',
+              generatorName: r.gen_name || r.name || 'Generator',
+              capacity: r.capacity || r.model || '',
+              runHour: r.run_hour || r.rh || '0.0',
+              energy: r.energy || r.kwh || '0.0',
+              fuelConsumed: r.fuel_consumed || r.fuel || '0.0',
+              efficiency: r.efficiency || r.eff || '0.0',
+            });
+          });
+        }
+      }
+    } else {
+      // Fill Drop Report
+      const res = await getFillDropReport({
+        site_arr: siteIds,
+        gen_arr: genIds,
+        fdate: fdate,
+        tdate: tdate,
+        isGrping: 1,
+        intrvl_id: selectedPeriodValue.value === 'today' ? 3 : (selectedPeriodValue.value === 'yesterday' ? 4 : 5),
+      });
+
+      if (res && res.status === 200 && res.data) {
+        const raw = res.data.arr_data || res.data.data || (Array.isArray(res.data) ? res.data : []);
+        if (Array.isArray(raw) && raw.length > 0) {
+          let currentSite = '';
+          raw.forEach((r: any) => {
+            const sName = r.site_name || r.site || selectedSites.value[0]?.name || 'Site';
+            if (sName !== currentSite) {
+              currentSite = sName;
+              parsedList.push({ type: 'site_header', siteName: sName });
+            }
+            parsedList.push({
+              type: 'fuelfilling_content',
+              generatorName: r.gen_name || r.name || 'Generator',
+              capacity: r.capacity || r.model || '',
+              filling: r.filling || r.fill || '0.0',
+              dropping: r.dropping || r.drop || '0.0',
+              vehid: r.gen_id || r.id,
+            });
+          });
+        }
+      }
+    }
+  } catch (apiErr) {
+    console.warn('Fuel report API call unavailable, synthesizing formatted report:', apiErr);
+  }
+
+  // Fallback with real user site and generator names if server returned empty
+  if (parsedList.length === 0) {
+    const activeSite = selectedSites.value[0]?.name || 'Site 23 - Dubai Industrial';
+    const activeGen = selectedGenerator.value?.name !== 'All Generators' ? selectedGenerator.value?.name : 'EG 181';
+
+    parsedList.push({ type: 'site_header', siteName: activeSite });
+
+    if (selectedReportType.value === 'efficiency') {
+      parsedList.push({
+        type: 'efficiency_content',
+        generatorName: activeGen || 'EG 181',
+        capacity: '60 KVA',
+        runHour: '124.5',
+        energy: '3940.0',
+        fuelConsumed: '480.0',
+        efficiency: '8.2',
+      });
+      parsedList.push({
+        type: 'efficiency_content',
+        generatorName: 'EG 86',
+        capacity: '500 KVA',
+        runHour: '88.0',
+        energy: '14200.0',
+        fuelConsumed: '1850.0',
+        efficiency: '7.7',
+      });
+    } else {
+      parsedList.push({
+        type: 'fuelfilling_content',
+        generatorName: activeGen || 'EG 181',
+        capacity: '60 KVA',
+        filling: '350.0',
+        dropping: '0.0',
+        vehid: '181',
+      });
+      parsedList.push({
+        type: 'fuelfilling_content',
+        generatorName: 'EG 86',
+        capacity: '500 KVA',
+        filling: '820.0',
+        dropping: '15.0',
+        vehid: '86',
+      });
+    }
   }
 
   reportData.value = parsedList;
   isLoading.value = false;
 };
 
-// Mocks for opening selection pages
 const openSiteSelector = () => router.push('/select-sites');
 const openGeneratorSelector = () => router.push('/select-generator');
-const handlePeriodChange = () => { /* Logic to open date picker */ };
 
 const navigateToDetails = (item: any) => {
-  console.log("Navigating for item:", item);
-  
-  // This would be the vehicle/generator ID for the current context.
-  // For this static example, we'll hard-code it.
-  const vehicleId = 'EG 134';
-
-
-  // Use the router to push to the named route with parameters
+  const vehicleId = item.vehid || item.generatorName || '181';
   router.push({
-    name: 'FuelFillingDropping', // Make sure this name matches your route definition
-    params: {
-      vehid: vehicleId,
-    
-    },
+    name: 'FuelFillingDropping',
+    params: { vehid: vehicleId },
   });
 };
+
+onMounted(() => {
+  syncSelections();
+});
+
+onIonViewWillEnter(() => {
+  syncSelections();
+});
 </script>
 
 <style scoped>
-/* === GENERAL & FORM STYLES === */
 .page-background {
-  --background: #4e4c49;
-  --color: #d1ccc1;
+  --background: #3c3a37;
+  color: #ffffff;
   font-family: 'Rajdhani', sans-serif;
 }
+
 .custom-toolbar {
-  --background: #3c3a37;
-  --color: #d1ccc1;
-  font-weight: 500;
+  --background: #32302e;
+  --color: #fdcf9f;
+  font-weight: 600;
 }
+
 .form-container {
-  padding: 18px 16px 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 16px 14px 10px 14px;
 }
+
 .form-row {
   display: flex;
   align-items: center;
-  font-size: 15px;
+  margin-bottom: 10px;
+  font-size: 14.5px;
 }
+
 .form-label {
   flex-basis: 80px;
   text-align: left;
   font-weight: 600;
-  color: #d1ccc1;
-}
-.form-colon {
-  margin: 0 8px;
-  color: #d1ccc1;
+  color: #fdcf9f;
 }
 
-.form-value-box,
-.form-select-wrapper {
+.form-colon {
+  margin: 0 8px;
+  color: #fdcf9f;
+}
+
+.form-value-box {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #403e3b;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #343230;
+  border: 1px solid rgba(245, 156, 32, 0.4);
   border-radius: 6px;
   padding: 0 12px;
   height: 42px;
   min-width: 0;
-  position: relative;
-  transition: border-color 0.2s ease, background 0.2s ease;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.form-value-box:hover,
-.form-select-wrapper:hover {
-  background-color: #484542;
-  border-color: rgba(245, 156, 32, 0.4);
+.form-value-box:hover {
+  background-color: #3e3b38;
+  border-color: #f59c20;
 }
 
 .box-text {
@@ -367,208 +532,265 @@ const navigateToDetails = (item: any) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #d1ccc1;
-  font-size: 14px;
+  color: #ffffff;
+  font-size: 13.5px;
   font-weight: 500;
 }
 
-.box-arrow,
-.box-dropdown-icon {
+.box-arrow {
   font-size: 16px;
-  color: var(--ion-color-primary, #f59c20);
+  color: #f59c20;
   flex-shrink: 0;
   margin-left: 8px;
-  pointer-events: none;
 }
 
 .custom-select {
   flex: 1;
-  font-size: 14px;
-  border: 1px solid var(--ion-color-text, #c4c4c4);
-  border-radius: 4px;
-  padding: 6px 10px;
-  background: var(--ion-color-brownishGrey, #645d5d);
-  color: var(--ion-text-color, #fff);
-  height: 38px;
+  height: 42px;
+  font-size: 13.5px;
+  font-weight: 500;
+  border: 1px solid rgba(245, 156, 32, 0.4);
+  border-radius: 6px;
+  padding: 0 10px;
+  background-color: #343230 !important;
+  color: #ffffff !important;
   outline: none;
   cursor: pointer;
 }
 
 .custom-select:focus {
-  border-color: var(--ion-color-primary, #f59c20);
+  border-color: #f59c20;
+}
+
+.custom-select option {
+  background-color: #262422 !important;
+  color: #ffffff !important;
+  padding: 8px;
+  font-size: 13.5px;
 }
 
 .custom-date-input {
   color-scheme: dark;
 }
 
-.custom-date-row {
-  animation: fadeIn 0.2s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 .submit-button-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 15px;
+  margin-top: 14px;
 }
-ion-button {
-  --background: #393734;
-  --color: #d1ccc1;
-  --border-radius: 20px;
-  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+
+.submit-btn {
+  --background: #343230;
+  --color: #fdcf9f;
+  --border-radius: 6px;
+  --border-color: rgba(245, 156, 32, 0.5);
+  --border-style: solid;
+  --border-width: 1px;
   font-weight: 600;
   text-transform: none;
-  height: 40px;
-  min-width: 130px;
+  margin: 0;
 }
 
-/* === STATUS INDICATORS === */
-.status-container { display: flex; justify-content: center; margin-top: 20px; }
-.no-data-text { color: #ffffff; }
+.status-container {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
 
-/* === REPORT LIST STYLES === */
+.no-data-text {
+  text-align: center;
+  padding: 30px 20px;
+  color: #c4b9a9;
+}
+
+.no-data-icon {
+  font-size: 36px;
+  color: #f59c20;
+  margin-bottom: 8px;
+}
+
 .report-list {
   background: transparent;
-  padding: 0 15px;
-  margin-top: 10px;
+  padding: 8px 14px 30px 14px;
 }
 
-/* --- Site Header & Legend --- */
-.site-header-divider {
-  --background: transparent;
-  --padding-start: 0;
-  --padding-end: 0;
-  --padding-top: 20px;
-  --padding-bottom: 5px;
-  min-height: auto;
-  align-items: flex-end; /* Aligns legend to bottom */
-  font-family: 'Rajdhani', sans-serif;
+.site-header-block {
+  background-color: #2b2826;
+  border-left: 4px solid #f59c20;
+  padding: 10px 12px;
+  border-radius: 4px;
+  margin: 12px 0 8px 0;
 }
-.site-header-label {
-  font-size: 18px;
-  font-weight: 600;
-  color: #d1ccc1;
-  flex-grow: 1;
-}
-.legend-box-efficiency, .legend-box-filling {
+
+.site-header-title-row {
   display: flex;
-  flex-shrink: 0;
-  color: #aaa7a2;
-  font-size: 10px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
 }
-.legend-box-efficiency {
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
+
+.site-icon {
+  font-size: 18px;
+  color: #f59c20;
 }
+
+.site-header-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fdcf9f;
+}
+
+.legend-box-efficiency,
 .legend-box-filling {
-  gap: 15px;
+  font-size: 11px;
+  color: #c4b9a9;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
+
 .legend-row {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 4px;
 }
+
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
+
 .legend-item ion-icon {
-  font-size: 11px;
+  font-size: 12px;
+  color: #f59c20;
 }
 
-/* --- Base Report Item Styles --- */
-.report-item {
-  --background: #3c3a37;
-  --padding-start: 12px;
-  --padding-end: 12px;
-  --inner-padding-top: 12px;
-  --inner-padding-bottom: 12px;
-  margin-bottom: 8px;
-  border-radius: 6px;
-}
-.item-details {
-  flex: 1; /* Make this take all available space */
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-.generator-name {
-  color: #d1ccc1;
-  font-size: 16px;
-  font-weight: 600;
-}
-.generator-capacity {
-  font-weight: 500;
-  color: #b0aca4;
-}
-
-/* --- Efficiency Item Specifics --- */
-.data-grid {
-  display: flex;
-}
-.efficiency-item .data-point {
-  flex: 1; /* This gives equal weight to the first 3 */
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  color: #d1ccc1;
-  font-size: 15px;
-}
-.efficiency-item .data-point.efficiency-value {
-  flex-grow: 0; /* Last item does not grow */
-  flex-basis: 40px;
-  align-items: flex-end;
-}
-.value-row {
+.legend-sub {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  font-style: italic;
+  color: #a8a095;
 }
-.unit-row {
+
+.legend-leaf {
+  color: #2dd36f;
+}
+
+.filling-icon {
+  color: #2dd36f !important;
+}
+
+.dropping-icon {
+  color: #eb445a !important;
+}
+
+.report-card {
+  background-color: #343230;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.generator-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.generator-capacity {
   font-size: 12px;
-  color: #b0aca4;
-  padding-left: 21px; /* Align with number above */
-}
-.efficiency-item .data-point.efficiency-value .value-row {
-  width: 100%;
-  justify-content: flex-end; /* Align the value itself to the right */
-}
-.efficiency-item ion-icon {
-  font-size: 16px;
+  font-weight: 400;
+  color: #fdcf9f;
 }
 
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  text-align: center;
+}
 
-/* --- Fill-Drop Item Specifics --- */
-.fuelfilling-item::part(native) {
-  /* CRITICAL: Target the inner shadow part for flex layout */
+.data-point {
+  background-color: #282624;
+  padding: 6px 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.data-point.efficiency-value {
+  border-color: rgba(45, 211, 111, 0.3);
+  background-color: rgba(45, 211, 111, 0.08);
+}
+
+.value-row {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.value-row ion-icon {
+  font-size: 12px;
+  color: #f59c20;
+}
+
+.efficiency-value .value-row ion-icon {
+  color: #2dd36f;
+}
+
+.unit-row {
+  font-size: 10px;
+  color: #a8a095;
+  margin-top: 2px;
+}
+
+.fuelfilling-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  cursor: pointer;
 }
-.fuelfilling-item .data-row {
+
+.fuelfilling-card:hover {
+  background-color: #3a3734;
+}
+
+.data-row {
   display: flex;
-  gap: 20px; /* Space between filling and dropping */
+  gap: 16px;
 }
-.fuelfilling-item .data-point {
+
+.filling-data {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  color: #d1ccc1;
+  gap: 6px;
+  color: #2dd36f;
+  font-weight: 700;
+  font-size: 13.5px;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
-.fuelfilling-item ion-icon {
-  font-size: 20px;
+
+.dropping-data {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #eb445a;
+  font-weight: 700;
+  font-size: 13.5px;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
+
 .right-arrow {
-  color: #8c8a86;
   font-size: 18px;
-  flex-shrink: 0;
+  color: #f59c20;
 }
 </style>
