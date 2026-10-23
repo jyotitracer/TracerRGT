@@ -140,6 +140,16 @@ import {
   IonLabel,
   onIonViewWillEnter,
 } from '@ionic/vue';
+import ExploreContainer from '@/components/ExploreContainer.vue';
+import { fileTrayFull, fileTraySharp, helpCircle, homeSharp, personCircle, shareSocial, } from 'ionicons/icons';
+import router from '@/router/index'; // Assuming your router file is named router.js
+import html2canvas from 'html2canvas';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import Constants from '@/common/constants';
+import axios from 'axios';
+import { createApp,onMounted,ref,onUnmounted,computed } from 'vue';
+import { Loader } from "@googlemaps/js-api-loader";
 import {
   helpCircle,
   homeSharp,
@@ -535,55 +545,74 @@ const navigateToPage = (pageName: number) => {
 const applyFilterAndRenderMarkers = () => {
   if (!newMap || !window.google?.maps) return;
 
-  clearAllMarkers();
-  if (currentInfoWindow) currentInfoWindow.close();
+  // Retrieve cached (selected) generator
+  const vehicleData = localStorage.getItem('selectedVeh');
+  if (vehicleData) {
+    try { vehicleObject.value = JSON.parse(vehicleData); } catch (e) { vehicleObject.value = null; }
+  }
 
-  const allGens = rawAllGenerators.value;
-  totalUnfilteredCount.value = allGens.length;
+  const selectedId  = vehicleObject.value?.id;
+  const initialLat  = vehicleObject.value?.lat  ? parseFloat(vehicleObject.value.lat)  : DEFAULT_LAT;
+  const initialLong = vehicleObject.value?.lon  ? parseFloat(vehicleObject.value.lon)  : DEFAULT_LNG;
+  const initialZoom = vehicleObject.value?.lat  ? 14 : 12;
+  const initialCenter = { lat: initialLat, lng: initialLong };
+  const storedMapType = localStorage.getItem('groupmapType') || 'roadmap';
 
-  // Retrieve filter settings from localStorage
-  const filterSettingsStr = localStorage.getItem('map_filter_settings');
-  let displayedGens = allGens;
-  let filterIsActive = false;
+  try {
+    const loader = new Loader({
+      apiKey: Constants.Google_map_API,
+      version: "weekly",
+      libraries: ['geometry', 'places']
+    });
 
-  if (filterSettingsStr) {
-    try {
-      const filter = JSON.parse(filterSettingsStr);
-      const hasStatusFilter = Array.isArray(filter.selectedStatuses);
-      const hasSiteFilter = Array.isArray(filter.selectedSiteIds) && filter.selectedSiteIds.length > 0;
+    await loader.load();
+    console.log('Google Maps API successfully loaded');
 
-      if (hasStatusFilter || hasSiteFilter) {
-        displayedGens = allGens.filter((gen) => {
-          const matchesStatus = !hasStatusFilter || filter.selectedStatuses.includes(gen.statusCategory);
-          const matchesSite =
-            !hasSiteFilter ||
-            filter.selectedSiteIds.some((sid: any) => String(sid) === String(gen.site_id));
-          return matchesStatus && matchesSite;
-        });
+    if (!mapRef.value && mapContainer.value) {
+      newMap = new window.google.maps.Map(mapContainer.value, {
+        center: initialCenter,
+        zoom: initialZoom,
+        mapTypeId: storedMapType,
+        zoomControl: true,
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false,
+      });
+      mapRef.value = newMap;
 
-        // Determine if filter is actively restricting
-        if (filter.isFilterActive !== undefined) {
-          filterIsActive = Boolean(filter.isFilterActive);
-        } else {
-          filterIsActive = displayedGens.length !== allGens.length;
-        }
-      }
-    } catch (e) {
-      console.warn('Error reading map_filter_settings:', e);
+      // Custom generator search handling (no Google Places autocomplete)
+      // The search input updates `searchTerm`, and matching generators are shown in a dropdown.
+      // Clicking a generator moves the map camera to its location.
+      // No external autocomplete is used.
+    } else if (newMap) {
+      newMap.setCenter(initialCenter);
+      newMap.setZoom(initialZoom);
     }
-  }
 
-  isFilterActive.value = filterIsActive;
-  generatorList.value = displayedGens;
+    if (!newMap || !window.google?.maps) return;
 
-  // If no generators match, stop marker plotting
-  if (displayedGens.length === 0) {
-    return;
-  }
+    // ─── Plot ALL generators ─────────────────────────────────────
+    clearAllMarkers();
+    if (currentInfoWindow) currentInfoWindow.close();
 
-  const selectedId = vehicleObject.value?.id;
-  const sharedInfoWindow = currentInfoWindow || new window.google.maps.InfoWindow();
-  currentInfoWindow = sharedInfoWindow;
+    // Try API; fall back to just the selected generator
+    let generators = await fetchAllGenerators();
+    if (generators.length === 0 && vehicleObject.value) {
+      generators = [{
+        id: vehicleObject.value.id,
+        name: vehicleObject.value.name || 'Selected Generator',
+        lat: initialLat,
+        lon: initialLong,
+        status: vehicleObject.value.sts_name || 'Active',
+        color: vehicleObject.value.sts_colr || '#f59c20',
+        capacity: vehicleObject.value.capacity || '',
+      }];
+    }
+    // Store in generatorList ref so search dropdown has all generators
+    generatorList.value = generators;
+
+    const sharedInfoWindow = new window.google.maps.InfoWindow();
+    currentInfoWindow = sharedInfoWindow;
 
   const bounds = new window.google.maps.LatLngBounds();
   let validMarkerCount = 0;
