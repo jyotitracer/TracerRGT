@@ -1,7 +1,7 @@
 
 class Constants {
 
-    public static API_URL_new = "https://www.tracerrgt.com/rgt/index_1.php/";
+   
     public static BASE_URL = "https://www.tracerrgt.com/rgt/index_1.php/";
 
     public static Google_map_API = "AIzaSyDa_jfQ1B9eWfym-lnYbUMNgqgzeAZDtT8";

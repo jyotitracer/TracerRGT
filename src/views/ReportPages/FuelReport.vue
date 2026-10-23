@@ -227,7 +227,7 @@ const reportData = ref<any[]>([]);
 const syncSelections = async () => {
   // 1. Read Sites
   try {
-    const savedSites = localStorage.getItem('selected_report_sites');
+    const savedSites = localStorage.getItem('fuel_selected_sites');
     if (savedSites) {
       const parsed = JSON.parse(savedSites);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -238,7 +238,7 @@ const syncSelections = async () => {
 
   // 2. Read Generator
   try {
-    const savedGen = localStorage.getItem('selected_report_generator');
+    const savedGen = localStorage.getItem('fuel_selected_generator');
     if (savedGen) {
       const parsed = JSON.parse(savedGen);
       if (parsed && parsed.id !== undefined) {
@@ -279,9 +279,7 @@ const syncSelections = async () => {
     }
   }
 
-  if (selectedSites.value.length === 0) {
-    selectedSites.value = [{ id: 23, name: 'Site 23 - Dubai Industrial' }];
-  }
+
   if (!selectedGenerator.value) {
     selectedGenerator.value = { id: 'all', name: 'All Generators' };
   }
@@ -326,8 +324,10 @@ const handleSubmit = async () => {
     tdate = customToDate.value || todayStr;
   }
 
-  const siteIds = selectedSites.value.map(s => s.id);
-  const genIds = selectedGenerator.value?.id === 'all' ? [] : [selectedGenerator.value?.id];
+  const siteIds = selectedSites.value.map(s => Number(s.id));
+  const genId = selectedGenerator.value?.id;
+
+const genIds = (!genId || genId === 'all') ? 'all' : String(genId);
 
   let parsedList: any[] = [];
 
@@ -335,7 +335,7 @@ const handleSubmit = async () => {
     if (selectedReportType.value === 'efficiency') {
       const res = await getFuelEfficiencyReport({
         site_arr: siteIds,
-        gen_arr: genIds,
+        gen_id: genIds,
         fdate: fdate,
         tdate: tdate,
         isGrping: 1,
@@ -368,7 +368,7 @@ const handleSubmit = async () => {
       // Fill Drop Report
       const res = await getFillDropReport({
         site_arr: siteIds,
-        gen_arr: genIds,
+        gen_id: genIds,
         fdate: fdate,
         tdate: tdate,
         isGrping: 1,
@@ -401,58 +401,14 @@ const handleSubmit = async () => {
     console.warn('Fuel report API call unavailable, synthesizing formatted report:', apiErr);
   }
 
-  // Fallback with real user site and generator names if server returned empty
-  if (parsedList.length === 0) {
-    const activeSite = selectedSites.value[0]?.name || 'Site 23 - Dubai Industrial';
-    const activeGen = selectedGenerator.value?.name !== 'All Generators' ? selectedGenerator.value?.name : 'EG 181';
 
-    parsedList.push({ type: 'site_header', siteName: activeSite });
-
-    if (selectedReportType.value === 'efficiency') {
-      parsedList.push({
-        type: 'efficiency_content',
-        generatorName: activeGen || 'EG 181',
-        capacity: '60 KVA',
-        runHour: '124.5',
-        energy: '3940.0',
-        fuelConsumed: '480.0',
-        efficiency: '8.2',
-      });
-      parsedList.push({
-        type: 'efficiency_content',
-        generatorName: 'EG 86',
-        capacity: '500 KVA',
-        runHour: '88.0',
-        energy: '14200.0',
-        fuelConsumed: '1850.0',
-        efficiency: '7.7',
-      });
-    } else {
-      parsedList.push({
-        type: 'fuelfilling_content',
-        generatorName: activeGen || 'EG 181',
-        capacity: '60 KVA',
-        filling: '350.0',
-        dropping: '0.0',
-        vehid: '181',
-      });
-      parsedList.push({
-        type: 'fuelfilling_content',
-        generatorName: 'EG 86',
-        capacity: '500 KVA',
-        filling: '820.0',
-        dropping: '15.0',
-        vehid: '86',
-      });
-    }
-  }
 
   reportData.value = parsedList;
   isLoading.value = false;
 };
 
-const openSiteSelector = () => router.push('/select-sites');
-const openGeneratorSelector = () => router.push('/select-generator');
+const openSiteSelector = () => router.push('/fuel-select-sites');
+const openGeneratorSelector = () => router.push('/fuel-select-generator');
 
 const navigateToDetails = (item: any) => {
   const vehicleId = item.vehid || item.generatorName || '181';

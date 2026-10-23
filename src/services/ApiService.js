@@ -80,10 +80,15 @@ const fetchData = async (controller, command, params = {}) => {
       return response;
     })
     .catch(async error => {
-      console.error(`Error fetching ${command}:`, error.response?.status, error.response?.data || error.message);
+      const isExpectedError = command === 'parameter_list' || command === 'notification_list';
+      if (isExpectedError) {
+        console.warn(`API Notice: ${command} returned ${error.response?.status || 'network error'}, using fallback.`);
+      } else {
+        console.error(`Error fetching ${command}:`, error.response?.status, error.response?.data || error.message);
+      }
       if (error.response && error.response.status === 401) {
         console.warn('Authentication token expired or invalid (401) for ' + command);
-        if (command !== 'dashboard_detail' && command !== 'generator_detail') {
+        if (command !== 'dashboard_detail' && command !== 'generator_detail' && command !== 'parameter_list') {
           globalToken = '';
           await storage.clear();
           import('@/router/index').then(({ default: router }) => {
@@ -140,8 +145,30 @@ const getDashboardDetail = (params = {}) => {
  * POST {{base_url}}/Mobile_Contro/generator_detail
  * Body: { gen_id: number }
  */
-const getGeneratorDetail = (genId) => {
-  return fetchData(Constants.CONT.Mobile_Contro, Constants.CMD.GENERATOR_DETAIL || 'generator_detail', { gen_id: Number(genId), id: Number(genId) });
+const getGeneratorDetail = (genIdOrObj) => {
+  let id = 0;
+  if (typeof genIdOrObj === 'object' && genIdOrObj !== null) {
+    id = Number(genIdOrObj.gen_id || genIdOrObj.veh_id || genIdOrObj.vehid || genIdOrObj.id || genIdOrObj.rec_id) || 0;
+  } else if (typeof genIdOrObj === 'number') {
+    id = genIdOrObj;
+  } else if (typeof genIdOrObj === 'string') {
+    id = Number(genIdOrObj);
+    if (isNaN(id)) {
+      const match = genIdOrObj.match(/\d+/g);
+      if (match && match.length > 0) {
+        id = Number(match[match.length - 1]);
+      }
+    }
+  }
+  const payload = {
+    gen_id: id,
+    genid: id,
+    veh_id: id,
+    vehid: id,
+    id: id,
+    rec_id: id,
+  };
+  return fetchData(Constants.CONT.Mobile_Contro, Constants.CMD.GENERATOR_DETAIL || 'generator_detail', payload);
 };
 
 /**
@@ -159,7 +186,11 @@ const getNotificationList = (recId = 0) => {
  * Body: {}
  */
 const getParameterList = (params = {}) => {
-  return fetchData(Constants.CONT.Mobile_Contro, Constants.CMD.PARAMETER_LIST || 'parameter_list', params);
+  return fetchData(Constants.CONT.Mobile_Contro, Constants.CMD.PARAMETER_LIST || 'parameter_list', params)
+    .catch(err => {
+      console.warn('Backend parameter_list unavailable or returned 500, using client catalog:', err.message);
+      return { status: 200, data: { arr_data: [] } };
+    });
 };
 
 /**
@@ -257,8 +288,8 @@ const getGeneratorOnOffList = (params = {}) => {
  * POST {{base_url}}/Mobile_Contro/update_gen_on_off
  * Body: { gen_arr: ["1", "2"] }
  */
-const updateGenOnOff = (genArr) => {
-  return fetchData(Constants.CONT.Mobile_Contro, Constants.CMD.UPDATE_GEN_ON_OFF || 'update_gen_on_off', { gen_arr: genArr });
+const updateGenOnOff = (genArr, action = '1') => {
+  return fetchData(Constants.CONT.Mobile_Contro, Constants.CMD.UPDATE_GEN_ON_OFF || 'update_gen_on_off', { gen_arr: genArr, action: String(action) });
 };
 
 export {

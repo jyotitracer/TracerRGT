@@ -182,6 +182,16 @@ export default {
                   setAuthToken(token);
                 }
 
+                // Clear any stale cached data from previous account logins
+                try {
+                  localStorage.removeItem('dashboard_detail');
+                  localStorage.removeItem('selected_report_sites');
+                  localStorage.removeItem('selected_report_generator');
+                  localStorage.removeItem('selected_report_events');
+                  localStorage.removeItem('selectedVeh');
+                  localStorage.removeItem('last_rec_id');
+                } catch (e) {}
+
                 await Promise.all([
                   storeData('login_data', responseJson),
                   storeData('token', token),

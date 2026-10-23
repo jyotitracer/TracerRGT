@@ -209,7 +209,7 @@ const reportData = ref<any[]>([]);
 const syncSelections = async () => {
   // 1. Read Sites
   try {
-    const savedSites = localStorage.getItem('selected_report_sites');
+    const savedSites = localStorage.getItem('event_selected_sites');
     if (savedSites) {
       const parsed = JSON.parse(savedSites);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -220,7 +220,7 @@ const syncSelections = async () => {
 
   // 2. Read Generator
   try {
-    const savedGen = localStorage.getItem('selected_report_generator');
+    const savedGen = localStorage.getItem('event_selected_generator');
     if (savedGen) {
       const parsed = JSON.parse(savedGen);
       if (parsed && parsed.id !== undefined) {
@@ -283,21 +283,8 @@ const syncSelections = async () => {
     }
   }
 
-  // Fallbacks with clean industrial naming
-  if (selectedSites.value.length === 0) {
-    selectedSites.value = [{ id: 23, name: 'Site 23 - Dubai Industrial' }];
-  }
   if (!selectedGenerator.value) {
     selectedGenerator.value = { id: 'all', name: 'All Generators' };
-  }
-  if (selectedEvents.value.length === 0) {
-    selectedEvents.value = [
-      { id: '1', name: 'Low Fuel Level' },
-      { id: '2', name: 'High Coolant Temperature' },
-      { id: '5', name: 'Engine Over-speed' },
-      { id: '6', name: 'Low Oil Pressure' },
-      { id: '9', name: 'Generator Overload' },
-    ];
   }
 };
 
@@ -348,15 +335,16 @@ const handleSubmit = async () => {
   hasSubmitted.value = true;
   reportData.value = [];
 
-  const siteIds = selectedSites.value.map(s => s.id);
-  const genId = selectedGenerator.value?.id === 'all' ? 0 : Number(selectedGenerator.value?.id || 0);
+  const siteIds = selectedSites.value.map(s => Number(s.id));
+  const rawGenId = selectedGenerator.value?.id;
+  const genIdStr = (!rawGenId || rawGenId === 'all') ? 'all' : String(rawGenId);
   const eventIds = selectedEvents.value.map(e => Number(e.id));
 
   let parsedList: any[] = [];
 
   try {
     const res = await getEventReport({
-      gen_id: genId,
+      gen_id: genIdStr,
       site_arr: siteIds,
       evnt_arr: eventIds,
       intrvl_id: selectedPeriod.value === 'today' ? 3 : (selectedPeriod.value === 'yesterday' ? 4 : (selectedPeriod.value === 'last_week' ? 2 : 5)),
@@ -412,46 +400,14 @@ const handleSubmit = async () => {
     console.warn('Event report API call unavailable, synthesizing formatted report:', apiErr);
   }
 
-  // If server returned empty or offline, construct report using selected site & generator names
-  if (parsedList.length === 0) {
-    const activeSiteName = selectedSites.value[0]?.name || 'Site 23 - Dubai Industrial';
-    const activeGenName = selectedGenerator.value?.name || 'EG 181 (60 KVA)';
-    const dateLabel = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-    parsedList.push({ type: 'site_header', siteName: activeSiteName });
-    parsedList.push({ type: 'date_header', date: dateLabel });
-    parsedList.push({
-      type: 'content',
-      eventName: 'Generator Start (Mains Failover)',
-      generatorName: activeGenName,
-      otherDetails: 'Auto start sequence initiated on mains failure',
-      dateRange: '08:15 AM to 08:48 AM',
-      duration: '33 min',
-    });
-    parsedList.push({
-      type: 'content',
-      eventName: 'Low Fuel Level Warning',
-      generatorName: activeGenName,
-      otherDetails: 'Fuel capacity reached 18.5% threshold',
-      dateRange: '10:30 AM to 10:35 AM',
-      duration: '5 min',
-    });
-    parsedList.push({
-      type: 'content',
-      eventName: 'Mains Grid Supply Restored',
-      generatorName: activeGenName,
-      otherDetails: 'Normal 400V grid power re-established',
-      dateRange: '11:10 AM to 11:12 AM',
-      duration: '2 min',
-    });
-  }
 
   reportData.value = parsedList;
   isLoading.value = false;
 };
 
-const openSiteSelector = () => router.push('/select-sites');
-const openGeneratorSelector = () => router.push('/select-generator');
+const openSiteSelector = () => router.push('/event-select-sites');
+const openGeneratorSelector = () => router.push('/event-select-generator');
 const openEventSelector = () => router.push('/select-events');
 
 const getEventSeverityClass = (eventName: string) => {

@@ -4,7 +4,7 @@ const config: CapacitorConfig = {
   appId: 'in.co.tracer.tracerrgt',
   appName: 'TracerRGT',
   webDir: 'dist',
-  plugins: {
+    plugins: {
     CapacitorHttp: {
       enabled: true,
     },

@@ -18,6 +18,7 @@
     </ion-header>
 
     <ion-content class="notification-content">
+      <!-- Notification Cards List -->
       <ion-list class="notification-list" v-if="selectedItems.length > 0">
         <ion-card v-for="(page, index) in selectedItems" :key="index" class="notification-card">
           <ion-card-content>
@@ -49,26 +50,22 @@
         <ion-icon :icon="notificationsOffOutline" class="empty-icon"></ion-icon>
         <p class="empty-text">No notifications found</p>
       </div>
-    </ion-content>
 
-    <!-- Footer Buttons for Delete Actions (Outside ion-content as standard Ionic footer) -->
-    <ion-footer class="footer-buttons">
-      <ion-toolbar class="footer-toolbar">
-        <div class="footer-buttons-wrapper">
-          <ion-button expand="block" @click="deleteAll" class="footer-button">
-            Clear All
-          </ion-button>
-          <ion-button expand="block" @click="deleteSelected" class="footer-button">
-            Clear Selected
-          </ion-button>
-        </div>
-      </ion-toolbar>
-    </ion-footer>
+      <!-- Footer Buttons for Delete Actions (Like Android code, inside screen above Tab Bar) -->
+      <div slot="fixed" class="footer-buttons" v-if="selectedItems.length > 0">
+        <ion-button expand="block" @click="deleteAll" class="footer-button">
+          Clear All
+        </ion-button>
+        <ion-button expand="block" @click="deleteSelected" class="footer-button">
+          Clear Selected
+        </ion-button>
+      </div>
+    </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   IonPage,
   IonHeader,
@@ -81,7 +78,6 @@ import {
   IonCard,
   IonCardContent,
   IonList,
-  IonFooter,
   IonCheckbox,
   loadingController,
 } from '@ionic/vue';
@@ -104,6 +100,7 @@ interface NotificationItem {
 }
 
 const selectedItems = ref<NotificationItem[]>([]);
+const hasSelectedItems = computed(() => selectedItems.value.some(item => item.selected));
 
 const goToHelpScreen = () => {
   router.push('/helpscreen/2');
@@ -306,12 +303,12 @@ ion-icon {
 
 .notification-content {
   --background: #3c3a37;
-  --padding-bottom: 20px;
+  --padding-bottom: 70px;
 }
 
 .notification-list {
   background: transparent;
-  padding: 8px;
+  padding: 8px 8px 75px 8px;
 }
 
 .notification-card {
@@ -361,12 +358,12 @@ ion-icon {
   font-weight: 400;
 }
 
-/* Custom Checkbox - visible and styled correctly */
+/* Custom Checkbox - visible and medium/small size */
 .custom-checkbox {
-  --size: 22px;
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
+  --size: 18px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
   --border-width: 2px;
   --border-color: #f59c20;
   --border-color-checked: #f59c20;
@@ -400,31 +397,31 @@ ion-icon {
   font-size: 15px;
 }
 
+/* Footer Buttons for Delete Actions (Like Android code, inside screen above Tab Bar) */
 .footer-buttons {
-  background: var(--ion-color-greyishBrown, #32302e);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.footer-toolbar {
-  --background: #32302e;
-  --border-width: 0;
-  padding: 6px 12px;
-}
-
-.footer-buttons-wrapper {
-  display: flex;
-  gap: 12px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
   width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 5%;
+  padding: 8px 12px;
+  background: var(--ion-color-greyishBrown, #433b3b);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 100;
 }
 
 .footer-button {
   flex: 1;
-  --background: #4a4642;
-  --color: #fdcf9f;
-  --border-radius: 6px;
-  font-weight: 600;
+  --background: var(--ion-color-greyishBrown, #433b3b);
+  --color: var(--ion-color-paleSalmon, #fdcf9f);
+  --ripple-color: var(--ion-color-paleSalmon, #fdcf9f);
+  border: 1px solid var(--ion-color-paleSalmon, #fdcf9f);
+  border-radius: 6px;
+  justify-items: center;
   text-transform: none;
   font-size: 14px;
-  margin: 0;
+  height: 40px;
 }
 </style>

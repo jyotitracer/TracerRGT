@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import {
   IonPage,
   IonHeader,
@@ -85,10 +85,14 @@ interface Generator {
 }
 
 const router = useRouter();
+const route = useRoute();
 const isLoading = ref(false);
 const searchQuery = ref('');
 const selectedGeneratorId = ref<string | number>('all');
 const allGenerators = ref<Generator[]>([]);
+
+const getSiteStorageKey = () => (route.path.includes('fuel') ? 'fuel_selected_sites' : 'event_selected_sites');
+const getGenStorageKey = () => (route.path.includes('fuel') ? 'fuel_selected_generator' : 'event_selected_generator');
 
 const filteredGenerators = computed(() => {
   if (!searchQuery.value) {
@@ -103,13 +107,28 @@ const filteredGenerators = computed(() => {
 const fetchGenerators = async () => {
   isLoading.value = true;
 
-  // Read saved selection
+  const genKey = getGenStorageKey();
+  const siteKey = getSiteStorageKey();
+
+  // Read saved selection for this report
   try {
-    const saved = localStorage.getItem('selected_report_generator');
+    const saved = localStorage.getItem(genKey) || localStorage.getItem('selected_report_generator');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed && parsed.id !== undefined) {
         selectedGeneratorId.value = parsed.id;
+      }
+    }
+  } catch (e) {}
+
+  // Read selected sites for this report
+  let selectedSiteIds: (string | number)[] = [];
+  try {
+    const savedSites = localStorage.getItem(siteKey) || localStorage.getItem('selected_report_sites');
+    if (savedSites) {
+      const parsed = JSON.parse(savedSites);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        selectedSiteIds = parsed.map((s: any) => s.id);
       }
     }
   } catch (e) {}
@@ -144,12 +163,17 @@ const fetchGenerators = async () => {
     } catch (e) {}
   }
 
+  // Filter siteArr to ONLY include the selected sites for this report!
+  const sitesToUse = selectedSiteIds.length > 0
+    ? siteArr.filter((s: any) => selectedSiteIds.some(sid => String(sid) === String(s.id || s.site_id)))
+    : siteArr;
+
   const list: Generator[] = [
-    { id: 'all', name: 'All Generators', siteName: 'Fleet overview' }
+    { id: 'all', name: 'All Generators', siteName: '' }
   ];
 
-  if (siteArr.length > 0) {
-    siteArr.forEach((s: any) => {
+  if (sitesToUse.length > 0) {
+    sitesToUse.forEach((s: any) => {
       const sName = s.name || s.site_name || '';
       if (Array.isArray(s.gen_arr)) {
         s.gen_arr.forEach((g: any) => {
@@ -165,15 +189,6 @@ const fetchGenerators = async () => {
         });
       }
     });
-  } else {
-    list.push(
-      { id: '181', name: 'EG 181 (60 KVA)', siteName: 'Site 23 - Dubai Industrial' },
-      { id: '86', name: 'EG 86 (500 KVA)', siteName: 'Site 23 - Dubai Industrial' },
-      { id: '75', name: 'EG 75 (250 KVA)', siteName: 'Site 8 - PMVE Station' },
-      { id: '105', name: 'EG 105 (150 KVA)', siteName: 'Site 8 - PMVE Station' },
-      { id: '197', name: 'EG 197 (200 KVA)', siteName: 'Site 9 - J#327 Plant' },
-      { id: '262', name: 'EG 262 (20 KVA)', siteName: 'Site 9 - J#327 Plant' },
-    );
   }
 
   allGenerators.value = list;
@@ -183,6 +198,8 @@ const fetchGenerators = async () => {
 const handleSelection = (generator: Generator) => {
   selectedGeneratorId.value = generator.id;
   try {
+    const genKey = getGenStorageKey();
+    localStorage.setItem(genKey, JSON.stringify(generator));
     localStorage.setItem('selected_report_generator', JSON.stringify(generator));
   } catch (e) {
     console.error('Failed to save selected generator:', e);
@@ -266,7 +283,7 @@ onMounted(() => {
 }
 
 .selected-check-icon {
-  font-size: 22px;
+  font-size: 18px;
   color: #2dd36f;
 }
 

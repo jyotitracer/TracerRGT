@@ -104,7 +104,20 @@ const handleLogout = async () => {
     console.warn('Logout API warning (clearing local session anyway):', error);
   } finally {
     setAuthToken('');
+    // Reset tab state to tab1 before clearing storage so the
+    // Ionic tabs component doesn't cache the previously active tab
+    await router.replace('/tabs/tab1');
     await storage.clear();
+    try {
+      const deviceToken = localStorage.getItem('deviceToken');
+      const hasSeenPrivacyPolicy = localStorage.getItem('RhasSeenPrivacyPolicy');
+      localStorage.clear();
+      sessionStorage.clear();
+      if (deviceToken) localStorage.setItem('deviceToken', deviceToken);
+      if (hasSeenPrivacyPolicy) localStorage.setItem('RhasSeenPrivacyPolicy', hasSeenPrivacyPolicy);
+    } catch (e) {
+      console.error('Error clearing localStorage on logout:', e);
+    }
     await loading.dismiss();
     router.replace('/login');
   }

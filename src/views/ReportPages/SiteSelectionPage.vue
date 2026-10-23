@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import {
   IonPage,
   IonHeader,
@@ -93,9 +93,15 @@ interface Site {
 }
 
 const router = useRouter();
+const route = useRoute();
 const isLoading = ref(false);
 const searchQuery = ref('');
 const allSites = ref<Site[]>([]);
+
+const getStorageKey = () => {
+  if (route.path.includes('fuel')) return 'fuel_selected_sites';
+  return 'event_selected_sites';
+};
 
 const filteredSites = computed(() => {
   if (!searchQuery.value) {
@@ -114,6 +120,8 @@ const areAllSitesSelected = computed(() => {
 const saveSelectedSites = () => {
   const selected = allSites.value.filter(s => s.isSelected);
   try {
+    const key = getStorageKey();
+    localStorage.setItem(key, JSON.stringify(selected));
     localStorage.setItem('selected_report_sites', JSON.stringify(selected));
   } catch (e) {
     console.error('Failed to save selected sites:', e);
@@ -137,10 +145,11 @@ const fetchSites = async () => {
   isLoading.value = true;
   let siteList: any[] = [];
 
-  // Check saved selections
+  // Check saved selections for this report type
   let savedIds: (string | number)[] | null = null;
   try {
-    const saved = localStorage.getItem('selected_report_sites');
+    const key = getStorageKey();
+    const saved = localStorage.getItem(key) || localStorage.getItem('selected_report_sites');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) {
@@ -178,14 +187,6 @@ const fetchSites = async () => {
     } catch (e) {}
   }
 
-  // Default fallback sites if needed
-  if (siteList.length === 0) {
-    siteList = [
-      { id: 23, name: 'Site 23 - Dubai Industrial' },
-      { id: 8, name: 'Site 8 - PMVE Station' },
-      { id: 9, name: 'Site 9 - J#327 Plant' },
-    ];
-  }
 
   allSites.value = siteList.map((s: any) => {
     const id = s.id || s.site_id;
@@ -280,6 +281,9 @@ onMounted(() => {
   --track-background: #484542;
   --track-background-checked: #f59c20;
   --handle-background-checked: #ffffff;
+  transform: scale(0.72);
+  transform-origin: center center;
+  margin: 0;
 }
 
 .site-list {
@@ -307,6 +311,9 @@ onMounted(() => {
   --track-background: #484542;
   --track-background-checked: #2dd36f;
   --handle-background-checked: #ffffff;
+  transform: scale(0.72);
+  transform-origin: right center;
+  margin: 0;
 }
 
 .status-container {

@@ -3,26 +3,24 @@
     <ion-header style="background-color: var( --ion-color-greyishBrown);">
       <ion-toolbar>
         <ion-title>TracerRGT</ion-title>
-     <ion-buttons  slot="primary">
-        <div class="custom_icon">
-        <ion-icon  slot="icon-only" :icon="helpCircle" @click="goToHelpScreen"></ion-icon>
-      </div>
-      <div class="custom_icon">
-        <ion-icon  slot="icon-only" :icon="shareSocial" @click="goToSharePage"></ion-icon>
-      </div>
-      <div class="custom_icon">
-        <ion-icon  slot="icon-only" :icon="personCircle" @click="goToProfilePage"></ion-icon>
-        </div>
-
-    </ion-buttons>
-  </ion-toolbar>
-
+        <ion-buttons slot="primary">
+          <div class="custom_icon">
+            <ion-icon slot="icon-only" :icon="helpCircle" @click="goToHelpScreen"></ion-icon>
+          </div>
+          <div class="custom_icon">
+            <ion-icon slot="icon-only" :icon="shareSocial" @click="goToSharePage"></ion-icon>
+          </div>
+          <div class="custom_icon">
+            <ion-icon slot="icon-only" :icon="personCircle" @click="goToProfilePage"></ion-icon>
+          </div>
+        </ion-buttons>
+      </ion-toolbar>
     </ion-header>
+
     <ion-content>
       <div ref="mapContainer" id="map" style="height: 100%;"></div>
 
-     
-      <!-- Search Box displayed on top of the map -->
+      <!-- Search Box & Active Filter Banner displayed on top of the map -->
       <div id="search-box-container" ref="searchContainerRef">
         <div class="search-input-wrapper">
           <ion-icon :icon="searchOutline" class="search-input-icon"></ion-icon>
@@ -43,6 +41,20 @@
           ></ion-icon>
         </div>
 
+        <!-- Active Filter Indicator Pill (shows when filter is active) -->
+        <div v-if="isFilterActive" class="active-filter-badge" @click="navigateToPage(1)">
+          <div class="filter-badge-content">
+            <ion-icon :icon="funnelOutline" class="filter-badge-icon"></ion-icon>
+            <span class="filter-badge-text">
+              Filtered: {{ generatorList.length }} / {{ totalUnfilteredCount }}
+            </span>
+          </div>
+          <button class="clear-filter-btn" @click.stop="clearFilter" title="Reset Filter">
+            <ion-icon :icon="closeCircle" class="clear-filter-icon"></ion-icon>
+            <span>Reset</span>
+          </button>
+        </div>
+
         <!-- Generator Dropdown List -->
         <div v-if="isSearchOpen && displayGenerators.length > 0" class="search-results">
           <div
@@ -57,8 +69,8 @@
             ></span>
             <div class="search-item-info">
               <span class="gen-title">{{ gen.name }}</span>
-              <span class="gen-subtitle" v-if="gen.capacity || gen.status">
-                {{ gen.capacity ? gen.capacity + ' • ' : '' }}{{ gen.status }}
+              <span class="gen-subtitle">
+                {{ gen.site_name ? gen.site_name + ' • ' : '' }}{{ gen.statusCategory || gen.status }}
               </span>
             </div>
             <ion-icon :icon="navigateOutline" class="gen-locate-icon"></ion-icon>
@@ -72,16 +84,32 @@
           <span>No generator found for "{{ searchTerm }}"</span>
         </div>
       </div>
-            
-      <ion-fab slot="fixed" vertical="bottom" horizontal="start">
+
+      <!-- No Matching Generators Overlay (when filter returns 0) -->
+      <div v-if="isFilterActive && generatorList.length === 0" class="no-match-overlay">
+        <div class="no-match-card">
+          <ion-icon :icon="alertCircleOutline" class="no-match-icon"></ion-icon>
+          <div class="no-match-title">No Generators Match Filter</div>
+          <div class="no-match-sub">Try selecting more statuses or sites in the filter screen.</div>
+          <div class="no-match-btn-row">
+            <button class="adjust-filter-btn" @click="navigateToPage(1)">
+              <ion-icon :icon="filterCircle" slot="start"></ion-icon>
+              Adjust Filter
+            </button>
+            <button class="reset-filter-btn" @click="clearFilter">
+              Reset All
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <ion-fab ref="fabRef" slot="fixed" vertical="bottom" horizontal="start">
+
         <ion-fab-button>
           <ion-icon :icon="chevronUpCircle" style="color: var(--ion-color-paleSalmon);"></ion-icon>
         </ion-fab-button>
 
         <ion-fab-list side="top">
-          <!-- Each FAB button with icon on the left and label on the right -->
-         
-
           <div class="fab-item" @click="navigateToPage(1)">
             <ion-icon class="fab-icon" :icon="filterCircle"></ion-icon>
             <ion-label class="fab-label">Filter Generators</ion-label>
@@ -93,33 +121,47 @@
           </div>
         </ion-fab-list>
       </ion-fab>
-    </ion-content>  </ion-page>
+    </ion-content>
+  </ion-page>
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent,IonButton,IonButtons,IonIcon, IonFab,
+import {
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButtons,
+  IonIcon,
+  IonFab,
   IonFabButton,
   IonFabList,
-  IonLabel,   onIonViewWillEnter  // Import necessary lifecycle hooks from Ionic
+  IonLabel,
+  onIonViewWillEnter,
 } from '@ionic/vue';
-import ExploreContainer from '@/components/ExploreContainer.vue';
-import { fileTrayFull, fileTraySharp, helpCircle, homeSharp, personCircle, shareSocial, } from 'ionicons/icons';
-import router from '@/router/index'; // Assuming your router file is named router.js
-import html2canvas from 'html2canvas';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
-import Constants from '@/common/constants';
-import axios from 'axios';
-import { createApp,onMounted,ref,onUnmounted,computed } from 'vue';
-import { Loader } from "@googlemaps/js-api-loader";
 import {
-  homeOutline,
+  helpCircle,
+  homeSharp,
+  personCircle,
+  shareSocial,
   filterCircle,
   chevronUpCircle,
   searchOutline,
   closeCircle,
-  navigateOutline
+  navigateOutline,
+  funnelOutline,
+  alertCircleOutline,
 } from 'ionicons/icons';
+import router from '@/router/index';
+import html2canvas from 'html2canvas';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import Constants from '@/common/constants';
+import { onMounted, ref, onUnmounted, computed } from 'vue';
+import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
+
+const fabRef = ref<any>(null);
 
 declare global {
   interface Window {
@@ -127,74 +169,140 @@ declare global {
   }
 }
 
+// ─── Status Classification Helper ───────────────────────────────────────
+// Matches the 6 statuses requested:
+// 1. Generator On
+// 2. Generator Off
+// 3. Generator Under Service
+// 4. Main On
+// 5. Generator Offline
+// 6. Generator not used
+const classifyGeneratorStatus = (g: any): { category: string; color: string } => {
+  if (!g) return { category: 'Generator Offline', color: '#9e9e9e' };
 
+  if (g.stsicon_conn === 0) {
+    return { category: 'Generator Offline', color: '#9e9e9e' };
+  }
+
+  const s = String(g.gen_sts || g.status || g.sts_name || '').trim().toLowerCase();
+  const dur = String(g.duration_sts || g.sts || '').trim().toLowerCase();
+
+  if (s.includes('not used') || s.includes('unused') || g.is_used === 0 || g.is_used === false) {
+    return { category: 'Generator not used', color: '#78909c' };
+  }
+  if (g.stsicon_type === 2 || s.includes('main')) {
+    return { category: 'Main On', color: '#ab47bc' };
+  }
+  if (g.stsicon_gen === 4 || s.includes('service') || s.includes('under service')) {
+    return { category: 'Generator Under Service', color: '#f59c20' };
+  }
+  if (
+    g.stsicon_gen === 1 ||
+    s === 'generator on' ||
+    s === 'running' ||
+    (dur.includes('on for') && !dur.includes('0 min'))
+  ) {
+    return { category: 'Generator On', color: '#68c521' };
+  }
+  if (
+    g.stsicon_gen === 5 ||
+    s === 'generator off' ||
+    s === 'stopped' ||
+    s.includes('off')
+  ) {
+    return { category: 'Generator Off', color: '#078dfc' };
+  }
+  if (s.includes('offline') || s.includes('disconnected')) {
+    return { category: 'Generator Offline', color: '#9e9e9e' };
+  }
+
+  return { category: 'Generator Off', color: '#078dfc' };
+};
+
+// ─── Header Navigation ──────────────────────────────────────────────────
 const goToHelpScreen = () => {
   router.push('/helpscreen/4');
 };
 
 const goToSharePage = async () => {
   try {
-        const ionPageElement = document.getElementById("main-content");
-        if (!ionPageElement) {
-          console.error("Main content area not found.");
-          return;
-        }
+    const ionPageElement = document.getElementById('main-content');
+    if (!ionPageElement) {
+      console.error('Main content area not found.');
+      return;
+    }
 
-        const canvas = await html2canvas(ionPageElement);
-        const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
-        const fileName = `screenshot_${new Date().getTime()}.jpg`;
+    const canvas = await html2canvas(ionPageElement);
+    const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
+    const fileName = `screenshot_${new Date().getTime()}.jpg`;
 
-        await Filesystem.writeFile({
-          path: fileName,
-          data: dataUrl.split(',')[1],
-          directory: Directory.Cache,
-        });
+    await Filesystem.writeFile({
+      path: fileName,
+      data: dataUrl.split(',')[1],
+      directory: Directory.Cache,
+    });
 
-        const uri = await Filesystem.getUri({
-          directory: Directory.Cache,
-          path: fileName,
-        });
+    const uri = await Filesystem.getUri({
+      directory: Directory.Cache,
+      path: fileName,
+    });
 
-        await Share.share({
-          title: 'Check this out!',
-          text: 'Sharing a screenshot',
-          url: uri.uri,
-          dialogTitle: 'Share Screenshot',
-        });
-      } catch (error) {
-        console.error('Error capturing and sharing screenshot', error);
-      }
-
+    await Share.share({
+      title: 'Check this out!',
+      text: 'Sharing a screenshot',
+      url: uri.uri,
+      dialogTitle: 'Share Screenshot',
+    });
+  } catch (error) {
+    console.error('Error capturing and sharing screenshot', error);
+  }
 };
 
 const goToProfilePage = () => {
   router.push('/profile');
 };
 
-
-
+// ─── Reactive State ─────────────────────────────────────────────────────
 const isDirection = ref(false);
 const isSearchLand = ref(false);
 const isMapType = ref(false);
 
 const mapRef = ref<any>(null);
-// Search related refs
 const searchTerm = ref('');
 const isSearchOpen = ref(false);
 const searchContainerRef = ref<HTMLElement | null>(null);
 const searchBoxRef = ref<HTMLInputElement | null>(null);
-const generatorList = ref<any[]>([]);
 
-// Shows all generators when clicked/focused, and filters dynamically when typing
+// Generator & Filter State
+const generatorList = ref<any[]>([]); // Current filtered list shown on map & dropdown
+const rawAllGenerators = ref<any[]>([]); // Full unfiltered master list
+const isFilterActive = ref(false);
+const totalUnfilteredCount = ref(0);
+
+const vehicleObject = ref<any>(null);
+const mapContainer = ref<HTMLElement | null>(null);
+
+let newMap: any = null;
+let allMarkers: any[] = [];
+let currentInfoWindow: any = null;
+
+// Fallback coordinate (Ahmedabad, India default)
+const DEFAULT_LAT = 23.0225;
+const DEFAULT_LNG = 72.5714;
+
+// Shows matching generators when typing in search box
 const displayGenerators = computed(() => {
   if (!searchTerm.value || !searchTerm.value.trim()) {
     return generatorList.value;
   }
   const term = searchTerm.value.toLowerCase().trim();
-  return generatorList.value.filter((g) =>
-    (g.name && g.name.toLowerCase().includes(term)) ||
-    (g.capacity && String(g.capacity).toLowerCase().includes(term)) ||
-    (g.status && String(g.status).toLowerCase().includes(term))
+  return generatorList.value.filter(
+    (g) =>
+      (g.name && g.name.toLowerCase().includes(term)) ||
+      (g.site_name && String(g.site_name).toLowerCase().includes(term)) ||
+      (g.capacity && String(g.capacity).toLowerCase().includes(term)) ||
+      (g.statusCategory && String(g.statusCategory).toLowerCase().includes(term)) ||
+      (g.status && String(g.status).toLowerCase().includes(term))
   );
 });
 
@@ -219,84 +327,136 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
+  clearAllMarkers();
+  if (currentInfoWindow) currentInfoWindow.close();
+  mapRef.value = null;
+  newMap = null;
 });
-
-let newMap: any = null;
-// All generator markers
-let allMarkers: any[] = [];
-let currentInfoWindow: any = null;
-let autocomplete: any = null;
-
-const vehicleObject = ref<any>(null);
-const mapContainer = ref<HTMLElement | null>(null);
 
 // Clear all map markers
 const clearAllMarkers = () => {
   allMarkers.forEach((item: any) => {
-    if (item && item.setMap) {
-      item.setMap(null);
-    } else if (item && item.marker && item.marker.setMap) {
-      item.marker.setMap(null);
-    }
+    try {
+      if (item && item.marker && item.marker.setMap) {
+        item.marker.setMap(null);
+      } else if (item && item.setMap) {
+        item.setMap(null);
+      }
+    } catch (e) {}
   });
   allMarkers = [];
 };
 
-// Fetch all generators from dashboard API
-const fetchAllGenerators = async (): Promise<any[]> => {
-  try {
-    const { getDashboardDetail } = await import('@/services/ApiService');
-    const res = await getDashboardDetail();
-    if (res.status === 200 && res.data) {
-      const d = res.data;
-      let gens: any[] = [];
-      if (Array.isArray(d.site_arr)) {
-        d.site_arr.forEach((s: any) => {
-          if (Array.isArray(s.gen_arr)) {
-            s.gen_arr.forEach((g: any, idx: number) => {
-              const isOn = g.gen_sts === 'Generator ON' || g.stsicon_gen === 1;
-              gens.push({
-                id: g.id || g.gen_id || `${s.id}_${idx}`,
-                name: g.name || `Generator ${g.id || idx + 1}`,
-                lat: g.lat !== undefined && g.lat !== null ? parseFloat(g.lat) : DEFAULT_LAT + (idx * 0.002),
-                lon: g.lon !== undefined && g.lon !== null ? parseFloat(g.lon) : DEFAULT_LNG + (idx * 0.002),
-                status: g.gen_sts || (isOn ? 'Generator ON' : 'Generator OFF'),
-                color: isOn ? '#4caf50' : '#f44336',
-                capacity: g.capacity || g.model || '',
-                location: g.loc || '',
-                site_name: s.name || '',
-                duration_sts: g.sts || '',
-              });
-            });
-          }
-        });
-      } else {
-        const rawGens = d.arr_data || d.generators || d.data;
-        if (Array.isArray(rawGens) && rawGens.length > 0) {
-          gens = rawGens.map((g: any, idx: number) => ({
-            id: g.gen_id || g.id || idx + 1,
-            name: g.gen_name || g.name || `Generator ${g.gen_id || idx + 1}`,
-            lat: g.lat || g.latitude || DEFAULT_LAT + (idx * 0.002),
-            lon: g.lon || g.longitude || g.lng || DEFAULT_LNG + (idx * 0.002),
-            status: g.status_name || g.status || 'Unknown',
-            color: g.sts_colr || (g.sts === 1 ? '#4caf50' : '#f44336'),
-            capacity: g.capacity || g.kva_rating || '',
-          }));
-        }
-      }
-      if (gens.length > 0) return gens;
-    }
-  } catch (err) {
-    console.warn('Could not fetch generator list from API:', err);
-  }
-  return [];
+// Reset / Clear active filter
+const clearFilter = () => {
+  localStorage.removeItem('map_filter_settings');
+  isFilterActive.value = false;
+  applyFilterAndRenderMarkers();
 };
 
-// Fallback coordinate (Ahmedabad, India default or site center)
-const DEFAULT_LAT = 23.0225;
-const DEFAULT_LNG = 72.5714;
+// ─── Fetch Generators from Cache & API ──────────────────────────────────
+const fetchAllGenerators = async (): Promise<any[]> => {
+  let parsedData: any = null;
 
-// Move camera to specific location
+  // 1. Immediately read from cache (fastest & robust against network drops)
+  try {
+    const cached = localStorage.getItem('dashboard_detail');
+    if (cached) {
+      parsedData = JSON.parse(cached);
+    }
+  } catch (e) {
+    console.warn('Error reading cached dashboard_detail in MapPage:', e);
+  }
+
+  // 2. Fallback to API if cache was empty
+  if (!parsedData || !Array.isArray(parsedData.site_arr) || parsedData.site_arr.length === 0) {
+    try {
+      const { getDashboardDetail } = await import('@/services/ApiService');
+      const res = await getDashboardDetail();
+      if (res && res.status === 200 && res.data) {
+        parsedData = res.data;
+        try {
+          localStorage.setItem('dashboard_detail', JSON.stringify(res.data));
+        } catch (e) {}
+      }
+    } catch (err) {
+      console.warn('Could not fetch generator list from API in MapPage:', err);
+    }
+  }
+
+  const gens: any[] = [];
+  if (parsedData && Array.isArray(parsedData.site_arr)) {
+    parsedData.site_arr.forEach((s: any) => {
+      const siteId = s.id || s.site_id;
+      const siteName = s.name || s.site_name || `Site ${siteId}`;
+      if (Array.isArray(s.gen_arr)) {
+        s.gen_arr.forEach((g: any, idx: number) => {
+          const { category, color } = classifyGeneratorStatus(g);
+
+          const rawLat = parseFloat(g.lat);
+          const rawLon = parseFloat(g.lon);
+          const isValidCoord =
+            !isNaN(rawLat) &&
+            !isNaN(rawLon) &&
+            Math.abs(rawLat) <= 90 &&
+            Math.abs(rawLon) <= 180 &&
+            (rawLat !== 0 || rawLon !== 0);
+
+          gens.push({
+            id: g.id || g.gen_id || `${siteId}_${idx}`,
+            name: g.name || `Generator ${g.id || idx + 1}`,
+            lat: isValidCoord ? rawLat : DEFAULT_LAT + idx * 0.002,
+            lon: isValidCoord ? rawLon : DEFAULT_LNG + idx * 0.002,
+            hasExactCoord: isValidCoord,
+            status: g.gen_sts || category,
+            statusCategory: category,
+            color: color,
+            capacity: g.capacity || g.model || '',
+            location: g.loc || '',
+            site_id: siteId,
+            site_name: siteName,
+            duration_sts: g.sts || '',
+            raw: g,
+          });
+        });
+      }
+    });
+  } else if (parsedData) {
+    const rawGens = parsedData.arr_data || parsedData.generators || parsedData.data;
+    if (Array.isArray(rawGens) && rawGens.length > 0) {
+      rawGens.forEach((g: any, idx: number) => {
+        const { category, color } = classifyGeneratorStatus(g);
+        const rawLat = parseFloat(g.lat || g.latitude);
+        const rawLon = parseFloat(g.lon || g.longitude || g.lng);
+        const isValidCoord =
+          !isNaN(rawLat) &&
+          !isNaN(rawLon) &&
+          Math.abs(rawLat) <= 90 &&
+          Math.abs(rawLon) <= 180 &&
+          (rawLat !== 0 || rawLon !== 0);
+
+        gens.push({
+          id: g.gen_id || g.id || idx + 1,
+          name: g.gen_name || g.name || `Generator ${g.gen_id || idx + 1}`,
+          lat: isValidCoord ? rawLat : DEFAULT_LAT + idx * 0.002,
+          lon: isValidCoord ? rawLon : DEFAULT_LNG + idx * 0.002,
+          hasExactCoord: isValidCoord,
+          status: g.status_name || g.status || category,
+          statusCategory: category,
+          color: color,
+          capacity: g.capacity || g.kva_rating || '',
+          site_id: g.site_id || 1,
+          site_name: g.site_name || '',
+          raw: g,
+        });
+      });
+    }
+  }
+
+  return gens;
+};
+
+// ─── Camera Movement ────────────────────────────────────────────────────
 const moveCameraToLocation = (lat: number, lon: number, zoomno: number) => {
   if (newMap && window.google?.maps) {
     newMap.setCenter(new window.google.maps.LatLng(lat, lon));
@@ -306,7 +466,7 @@ const moveCameraToLocation = (lat: number, lon: number, zoomno: number) => {
   }
 };
 
-// Handle selection from custom search dropdown: camera moves to generator coordinates & opens InfoWindow
+// Selection from search dropdown
 const selectGeneratorFromSearch = (gen: any) => {
   searchTerm.value = gen.name;
   isSearchOpen.value = false;
@@ -314,15 +474,12 @@ const selectGeneratorFromSearch = (gen: any) => {
   const lon = parseFloat(gen.lon) || DEFAULT_LNG;
   moveCameraToLocation(lat, lon, 16);
 
-  // Auto-open InfoWindow on the selected generator's marker
   const found = allMarkers.find((item: any) => String(item.id) === String(gen.id));
   if (found && found.marker && currentInfoWindow && newMap) {
     currentInfoWindow.setContent(found.infoContent);
-    currentInfoWindow.open(newMap, found.marker);
+    currentInfoWindow.open({ map: newMap, anchor: found.marker, shouldFocus: false });
   }
 };
-
-
 
 // Safe directions method
 const getDirections = (destLat: number, destLon: number) => {
@@ -353,8 +510,17 @@ const getDirections = (destLat: number, destLon: number) => {
   }
 };
 
-// FAB button click handling
+// FAB button navigation
+// FAB button navigation
 const navigateToPage = (pageName: number) => {
+  // Close the floating FAB list
+  if (fabRef.value) {
+    const el = fabRef.value.$el || fabRef.value;
+    if (typeof el?.close === 'function') {
+      el.close();
+    }
+  }
+
   if (pageName === 1) {
     router.push('/mapfilterGen');
   } else if (pageName === 2) {
@@ -364,83 +530,72 @@ const navigateToPage = (pageName: number) => {
   }
 };
 
-// Helper to initialize or update Google Map
-const initGoogleMap = async () => {
-  if (!mapContainer.value) return;
 
-  // Retrieve cached (selected) generator
-  const vehicleData = localStorage.getItem('selectedVeh');
-  if (vehicleData) {
-    try { vehicleObject.value = JSON.parse(vehicleData); } catch (e) { vehicleObject.value = null; }
+// ─── Filter & Render Markers ────────────────────────────────────────────
+const applyFilterAndRenderMarkers = () => {
+  if (!newMap || !window.google?.maps) return;
+
+  clearAllMarkers();
+  if (currentInfoWindow) currentInfoWindow.close();
+
+  const allGens = rawAllGenerators.value;
+  totalUnfilteredCount.value = allGens.length;
+
+  // Retrieve filter settings from localStorage
+  const filterSettingsStr = localStorage.getItem('map_filter_settings');
+  let displayedGens = allGens;
+  let filterIsActive = false;
+
+  if (filterSettingsStr) {
+    try {
+      const filter = JSON.parse(filterSettingsStr);
+      const hasStatusFilter = Array.isArray(filter.selectedStatuses);
+      const hasSiteFilter = Array.isArray(filter.selectedSiteIds) && filter.selectedSiteIds.length > 0;
+
+      if (hasStatusFilter || hasSiteFilter) {
+        displayedGens = allGens.filter((gen) => {
+          const matchesStatus = !hasStatusFilter || filter.selectedStatuses.includes(gen.statusCategory);
+          const matchesSite =
+            !hasSiteFilter ||
+            filter.selectedSiteIds.some((sid: any) => String(sid) === String(gen.site_id));
+          return matchesStatus && matchesSite;
+        });
+
+        // Determine if filter is actively restricting
+        if (filter.isFilterActive !== undefined) {
+          filterIsActive = Boolean(filter.isFilterActive);
+        } else {
+          filterIsActive = displayedGens.length !== allGens.length;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading map_filter_settings:', e);
+    }
   }
 
-  const selectedId  = vehicleObject.value?.id;
-  const initialLat  = vehicleObject.value?.lat  ? parseFloat(vehicleObject.value.lat)  : DEFAULT_LAT;
-  const initialLong = vehicleObject.value?.lon  ? parseFloat(vehicleObject.value.lon)  : DEFAULT_LNG;
-  const initialZoom = vehicleObject.value?.lat  ? 14 : 12;
-  const initialCenter = { lat: initialLat, lng: initialLong };
-  const storedMapType = localStorage.getItem('groupmapType') || 'roadmap';
+  isFilterActive.value = filterIsActive;
+  generatorList.value = displayedGens;
 
-  try {
-    const loader = new Loader({
-      apiKey: Constants.Google_map_API,
-      version: "weekly",
-      libraries: ['geometry', 'places']
-    });
+  // If no generators match, stop marker plotting
+  if (displayedGens.length === 0) {
+    return;
+  }
 
-    await loader.load();
-    console.log('Google Maps API successfully loaded');
+  const selectedId = vehicleObject.value?.id;
+  const sharedInfoWindow = currentInfoWindow || new window.google.maps.InfoWindow();
+  currentInfoWindow = sharedInfoWindow;
 
-    if (!mapRef.value && mapContainer.value) {
-      newMap = new window.google.maps.Map(mapContainer.value, {
-        center: initialCenter,
-        zoom: initialZoom,
-        mapTypeId: storedMapType,
-        zoomControl: true,
-        mapTypeControl: false,
-        fullscreenControl: false,
-        streetViewControl: false,
-      });
-      mapRef.value = newMap;
+  const bounds = new window.google.maps.LatLngBounds();
+  let validMarkerCount = 0;
 
-      // Custom generator search handling (no Google Places autocomplete)
-      // The search input updates `searchTerm`, and matching generators are shown in a dropdown.
-      // Clicking a generator moves the map camera to its location.
-      // No external autocomplete is used.
-    } else if (newMap) {
-      newMap.setCenter(initialCenter);
-      newMap.setZoom(initialZoom);
-    }
-
-    if (!newMap || !window.google?.maps) return;
-
-    // ─── Plot ALL generators ─────────────────────────────────────
-    clearAllMarkers();
-    if (currentInfoWindow) currentInfoWindow.close();
-
-    // Try API; fall back to just the selected generator
-    let generators = await fetchAllGenerators();
-    if (generators.length === 0 && vehicleObject.value) {
-      generators = [{
-        id: vehicleObject.value.id,
-        name: vehicleObject.value.name || 'Selected Generator',
-        lat: initialLat,
-        lon: initialLong,
-        status: vehicleObject.value.sts_name || 'Active',
-        color: vehicleObject.value.sts_colr || '#f59c20',
-        capacity: vehicleObject.value.capacity || '',
-      }];
-    }
-    // Store in generatorList ref so search dropdown has all generators
-    generatorList.value = generators;
-
-    const sharedInfoWindow = new window.google.maps.InfoWindow();
-    currentInfoWindow = sharedInfoWindow;
-
-    generators.forEach((gen: any) => {
+  displayedGens.forEach((gen: any) => {
+    try {
       const isSelected = String(gen.id) === String(selectedId);
-      const lat = parseFloat(gen.lat) || DEFAULT_LAT;
-      const lng = parseFloat(gen.lon) || DEFAULT_LNG;
+      const lat = parseFloat(gen.lat);
+      const lng = parseFloat(gen.lon);
+
+      if (isNaN(lat) || isNaN(lng)) return;
+
       const markerColor = gen.color || (isSelected ? '#f59c20' : '#999999');
 
       const marker = new window.google.maps.Marker({
@@ -453,57 +608,126 @@ const initGoogleMap = async () => {
             : window.google.maps.SymbolPath.CIRCLE,
           fillColor: markerColor,
           fillOpacity: 1,
-          strokeWeight: isSelected ? 2 : 1,
+          strokeWeight: isSelected ? 2.5 : 1.5,
           strokeColor: '#ffffff',
-          scale: isSelected ? 8 : 5,
+          scale: isSelected ? 8 : 6,
         },
-        zIndex: isSelected ? 10 : 1,
+        zIndex: isSelected ? 100 : 10,
       });
 
+      bounds.extend({ lat, lng });
+      validMarkerCount++;
+
       const infoContent = `
-        <div style="color:#222;font-family:sans-serif;padding:6px 8px;min-width:140px;">
-          <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${gen.name}</div>
-          <div style="font-size:12px;color:#555;">Status: <span style="font-weight:600;color:${markerColor};">${gen.status}</span></div>
-          ${gen.capacity ? `<div style="font-size:12px;color:#555;">Capacity: ${gen.capacity}</div>` : ''}
-          <div style="font-size:11px;color:#888;margin-top:4px;">${lat.toFixed(4)}, ${lng.toFixed(4)}</div>
+        <div style="color:#222;font-family:sans-serif;padding:6px 8px;min-width:150px;">
+          <div style="font-weight:bold;font-size:14px;margin-bottom:4px;color:#111;">${gen.name}</div>
+          <div style="font-size:12px;color:#444;margin-bottom:3px;">Site: <b>${gen.site_name || 'N/A'}</b></div>
+          <div style="font-size:12px;color:#444;margin-bottom:3px;">
+            Status: <span style="font-weight:600;color:${markerColor};">${gen.statusCategory || gen.status}</span>
+          </div>
+          ${gen.capacity ? `<div style="font-size:12px;color:#555;margin-bottom:3px;">Capacity: ${gen.capacity}</div>` : ''}
+          ${gen.duration_sts ? `<div style="font-size:11px;color:#777;margin-bottom:3px;">${gen.duration_sts}</div>` : ''}
+          <div style="font-size:10px;color:#888;margin-top:4px;">${lat.toFixed(4)}, ${lng.toFixed(4)}</div>
         </div>`;
 
       marker.addListener('click', () => {
         sharedInfoWindow.setContent(infoContent);
-        sharedInfoWindow.open(newMap, marker);
+        sharedInfoWindow.open({ map: newMap, anchor: marker, shouldFocus: false });
       });
 
       allMarkers.push({
         id: gen.id,
         marker: marker,
-        infoContent: infoContent
+        infoContent: infoContent,
       });
 
-      // Auto-open InfoWindow for selected generator
       if (isSelected) {
         sharedInfoWindow.setContent(infoContent);
-        sharedInfoWindow.open(newMap, marker);
+        sharedInfoWindow.open({ map: newMap, anchor: marker, shouldFocus: false });
       }
-    });
+    } catch (err) {
+      console.warn('Error plotting marker for gen:', gen?.name, err);
+    }
+  });
 
+  // Fit bounds to show all filtered generators nicely
+  if (validMarkerCount > 1) {
+    newMap.fitBounds(bounds, { top: 70, right: 30, bottom: 80, left: 30 });
+  } else if (validMarkerCount === 1) {
+    newMap.setCenter(bounds.getCenter());
+    newMap.setZoom(15);
+  }
+};
+
+// ─── Initialize Google Map ──────────────────────────────────────────────
+const initGoogleMap = async () => {
+  if (!mapContainer.value) return;
+
+  const vehicleData = localStorage.getItem('selectedVeh');
+  if (vehicleData) {
+    try {
+      vehicleObject.value = JSON.parse(vehicleData);
+    } catch (e) {
+      vehicleObject.value = null;
+    }
+  }
+
+  const initialLat = vehicleObject.value?.lat ? parseFloat(vehicleObject.value.lat) : DEFAULT_LAT;
+  const initialLong = vehicleObject.value?.lon ? parseFloat(vehicleObject.value.lon) : DEFAULT_LNG;
+  const initialZoom = vehicleObject.value?.lat ? 14 : 12;
+  const initialCenter = { lat: initialLat, lng: initialLong };
+  const storedMapType = localStorage.getItem('groupmapType') || 'roadmap';
+
+  try {
+       if (!window.google?.maps) {
+      const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || Constants.Google_map_API;
+      setOptions({
+        key: apiKey,
+        v: 'weekly',
+      });
+      await importLibrary('maps');
+      await importLibrary('geometry');
+    }
+
+
+    
+
+    if (!mapRef.value && mapContainer.value) {
+      newMap = new window.google.maps.Map(mapContainer.value, {
+        center: initialCenter,
+        zoom: initialZoom,
+        mapTypeId: storedMapType,
+        zoomControl: true,
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false,
+      });
+      mapRef.value = newMap;
+    } else if (newMap) {
+      // Trigger resize to fix blank/gray canvas errors on Ionic tab re-entry
+      window.google.maps.event.trigger(newMap, 'resize');
+      newMap.setCenter(initialCenter);
+      newMap.setZoom(initialZoom);
+    }
+
+    // Fetch master generator list once
+    const gens = await fetchAllGenerators();
+    rawAllGenerators.value = gens;
+
+    // Apply filters and render markers
+    applyFilterAndRenderMarkers();
   } catch (e) {
     console.error('Error initializing Google Maps:', e);
   }
 };
 
-// Run every time the page enters the view
+// ─── Ionic Lifecycle Hook ───────────────────────────────────────────────
 onIonViewWillEnter(async () => {
-  // Pre-load generators immediately for instant search availability
-  fetchAllGenerators().then((list) => {
-    if (list && list.length > 0) {
-      generatorList.value = list;
-    }
-  });
-
-  await initGoogleMap();
-  // Reset search term and dropdown on view entry
+  // Reset search box
   searchTerm.value = '';
   isSearchOpen.value = false;
+
+  await initGoogleMap();
 
   if (isMapType.value && mapRef.value) {
     mapRef.value.setMapTypeId(localStorage.getItem('groupmapType') || 'roadmap');
@@ -520,8 +744,8 @@ onIonViewWillEnter(async () => {
   }
 
   if (isSearchLand.value) {
-    const land_dirLat = localStorage.getItem("landmark_lat");
-    const land_dirLng = localStorage.getItem("landmark_lng");
+    const land_dirLat = localStorage.getItem('landmark_lat');
+    const land_dirLng = localStorage.getItem('landmark_lng');
     if (land_dirLat && land_dirLng) {
       moveCameraToLocation(parseFloat(land_dirLat), parseFloat(land_dirLng), 10);
     }
@@ -529,86 +753,69 @@ onIonViewWillEnter(async () => {
     localStorage.removeItem('landmark_lng');
   }
 });
-
-// Clean up on component unmount
-onUnmounted(() => {
-  clearAllMarkers();
-  if (currentInfoWindow) currentInfoWindow.close();
-  mapRef.value = null;
-  newMap = null;
-});
-
-
 </script>
 
-
 <style scoped>
-.custom_icon{
+.custom_icon {
   margin-right: 10px;
 }
 
-ion-icon{
-    height: 30px;
-    width: 30px;
-    color: #fdcf9f; /* Custom color for the icon */
-  }
+ion-icon {
+  height: 30px;
+  width: 30px;
+  color: #fdcf9f;
+}
 
-
-
-  .fab-item {
+.fab-item {
   width: 100%;
   height: 30px;
   display: flex;
   align-items: center;
   margin-bottom: 10px;
-  padding-right: 16px; /* Add padding to the right to avoid text being cut off */
-  overflow: hidden; /* Prevent overflow issues */
+  padding-right: 16px;
+  overflow: hidden;
 }
-ion-fab-button{
-  --background: var(--ion-color-greyishBrown);
 
+ion-fab-button {
+  --background: var(--ion-color-greyishBrown);
 }
 
 .fab-label {
-  margin-left: 8px; /* Space between icon and label */
+  margin-left: 8px;
   font-size: 16px;
   color: var(--ion-color-paleSalmon);
   background-color: var(--ion-color-greyishBrown);
   padding: 4px 8px;
   border-radius: 4px;
-  white-space: nowrap; /* Prevent the label from breaking into a new line */
-  overflow: hidden; /* Prevent overflow */
-  text-overflow: ellipsis; /* Add ellipsis if the text overflows */
-  max-width: 150px; /* Set a max width for labels */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
 }
+
 .fab-icon {
   color: var(--ion-color-paleSalmon);
-
-  /* Add circular background */
-  background-color: var(--ion-color-greyishBrown); /* Background color */
-  width: 30px;  /* Set the width of the circle */
-  height: 30px; /* Set the height of the circle */
-  border-radius: 100%; /* Make it circular */
-  
-  display: flex; /* Center the icon inside the circle */
+  background-color: var(--ion-color-greyishBrown);
+  width: 30px;
+  height: 30px;
+  border-radius: 100%;
+  display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Reduce the size of the close button for the InfoWindow */
+/* Reduce the size of the close button for InfoWindow */
 .gm-ui-hover-effect {
-  width: 30px !important;    /* Adjust the width */
-  height: 30px !important;   /* Adjust the height */
-  right: 5px !important;     /* Adjust the position if needed */
-  top: 5px !important;       /* Adjust the position if needed */
-  
+  width: 30px !important;
+  height: 30px !important;
+  right: 5px !important;
+  top: 5px !important;
 }
+
 .gm-ui-hover-effect > img {
-  width: 100% !important;    /* Make sure the image inside the button scales accordingly */
+  width: 100% !important;
   height: 100% !important;
 }
-
-
 
 #search-box-container {
   position: absolute;
@@ -616,7 +823,7 @@ ion-fab-button{
   left: 14px;
   z-index: 1000;
   width: calc(100% - 28px);
-  max-width: 320px;
+  max-width: 340px;
 }
 
 .search-input-wrapper {
@@ -669,7 +876,63 @@ ion-fab-button{
   color: #ffffff;
 }
 
-/* Generator results dropdown */
+/* ─── ACTIVE FILTER BADGE ─── */
+.active-filter-badge {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(61, 55, 53, 0.94);
+  border: 1px solid var(--ion-color-paleSalmon, #fdcf9f);
+  border-radius: 10px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.filter-badge-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-badge-icon {
+  font-size: 16px;
+  color: var(--ion-color-paleSalmon, #fdcf9f);
+}
+
+.filter-badge-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.clear-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  border-radius: 6px;
+  padding: 3px 7px;
+  color: var(--ion-color-paleSalmon, #fdcf9f);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.clear-filter-btn:active {
+  transform: scale(0.95);
+}
+
+.clear-filter-icon {
+  font-size: 13px;
+}
+
+/* ─── SEARCH RESULTS DROPDOWN ─── */
 .search-results {
   margin-top: 6px;
   background-color: var(--ion-color-greyishBrown, #3d3735);
@@ -694,7 +957,8 @@ ion-fab-button{
   border-bottom: none;
 }
 
-.search-item:hover, .search-item:active {
+.search-item:hover,
+.search-item:active {
   background-color: rgba(253, 207, 159, 0.14);
 }
 
@@ -747,6 +1011,87 @@ ion-fab-button{
   font-family: 'Rajdhani', sans-serif;
 }
 
+/* ─── NO MATCH OVERLAY ─── */
+.no-match-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  width: calc(100% - 40px);
+  max-width: 300px;
+}
+
+.no-match-card {
+  background: rgba(61, 55, 53, 0.95);
+  border: 1px solid var(--ion-color-paleSalmon, #fdcf9f);
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.no-match-icon {
+  font-size: 42px;
+  color: var(--ion-color-paleSalmon, #fdcf9f);
+  margin-bottom: 8px;
+}
+
+.no-match-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Rajdhani', sans-serif;
+  margin-bottom: 6px;
+}
+
+.no-match-sub {
+  font-size: 12px;
+  color: #d1ccc1;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.no-match-btn-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.adjust-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--ion-color-paleSalmon, #fdcf9f);
+  color: #2b2b2b;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  cursor: pointer;
+}
+
+.adjust-filter-btn ion-icon {
+  width: 18px;
+  height: 18px;
+  color: #2b2b2b;
+}
+
+.reset-filter-btn {
+  background: transparent;
+  color: var(--ion-color-paleSalmon, #fdcf9f);
+  border: 1px solid var(--ion-color-paleSalmon, #fdcf9f);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Rajdhani', sans-serif;
+  cursor: pointer;
+}
+
 #map {
   height: 100%;
   width: 100%;
@@ -755,7 +1100,6 @@ ion-fab-button{
   background-color: #2b2b2b;
 }
 
-/* Ensure Ionic content inner scroll container fills the whole screen for the map */
 ion-content::part(scroll) {
   height: 100%;
 }

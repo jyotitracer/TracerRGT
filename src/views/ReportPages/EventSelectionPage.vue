@@ -136,6 +136,7 @@ const handleToggleEvent = async (eventItem: EventItem, event: CustomEvent) => {
   try {
     await updateEventStatus([{
       evnt_id: Number(eventItem.id),
+      event_id: Number(eventItem.id),
       sts: eventItem.isSelected ? 1 : 0
     }], 2);
   } catch (err) {
@@ -153,7 +154,7 @@ const fetchEvents = async () => {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) {
-        savedIds = parsed.map((e: any) => e.id);
+        savedIds = parsed.map((e: any) => e.id ?? e.event_id);
       }
     }
   } catch (e) {}
@@ -187,8 +188,8 @@ const fetchEvents = async () => {
   }
 
   allEvents.value = rawList.map((item: any) => {
-    const id = item.evnt_id || item.id;
-    const name = item.evnt_name || item.name || `Event ${id}`;
+    const id = item.event_id ?? item.evnt_id ?? item.id;
+    const name = item.event_name ?? item.evnt_name ?? item.name ?? `Event ${id}`;
     const isSelected = savedIds !== null ? savedIds.includes(id) : Boolean(item.sts === 1 || item.status === 1 || item.isSelected !== false);
     return { id, name, isSelected };
   });
@@ -279,6 +280,9 @@ onMounted(() => {
   --track-background: #484542;
   --track-background-checked: #f59c20;
   --handle-background-checked: #ffffff;
+  transform: scale(0.72);
+  transform-origin: center center;
+  margin: 0;
 }
 
 .event-list {
@@ -306,6 +310,9 @@ onMounted(() => {
   --track-background: #484542;
   --track-background-checked: #2dd36f;
   --handle-background-checked: #ffffff;
+  transform: scale(0.72);
+  transform-origin: right center;
+  margin: 0;
 }
 
 .status-container {

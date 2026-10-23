@@ -65,15 +65,17 @@
                   <span class="item-name">{{ gen.name }}</span>
                   <span class="item-site" v-if="gen.siteName">{{ gen.siteName }}</span>
                 </div>
-                <div class="item-switch-control">
+                <div class="item-switch-control" style="display: flex; align-items: center; gap: 8px;">
                   <ion-toggle
-                    v-model="gen.isOn"
-                    @ionChange="toggleGenerator(gen)"
+                    :checked="gen.isOn"
+                    :disabled="gen.isPending"
+                    @click.prevent="promptToggle(gen)"
                     mode="ios"
                     class="small-toggle"
                   ></ion-toggle>
+                  <ion-icon v-if="gen.isPending" :icon="hourglassOutline" class="pending-timer-icon" title="Pending Decision"></ion-icon>
                 </div>
-                <span class="item-cancel" @click="cancelAction(gen.id)">Cancel</span>
+                <span class="item-cancel" v-if="gen.isPending" @click="cancelAction(gen)">Cancel</span>
               </div>
             </div>
           </ion-list>
@@ -95,7 +97,7 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent,IonButton,IonButto
   IonList,
   IonToggle, } from '@ionic/vue';
 import ExploreContainer from '@/components/ExploreContainer.vue';
-import { helpCircle, personCircle, shareSocial, } from 'ionicons/icons';
+import { helpCircle, personCircle, shareSocial, hourglassOutline } from 'ionicons/icons';
 import router from '@/router/index'; // Assuming your router file is named router.js
 import html2canvas from 'html2canvas';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -112,6 +114,7 @@ interface GenItem {
   name: string;
   isOn: boolean;
   siteName?: string;
+  isPending?: boolean;
 }
 
 const generators = ref<GenItem[]>([]);
@@ -209,22 +212,56 @@ const areAllOn = computed(() => {
   return filteredGenerators.value.every(gen => gen.isOn);
 });
 
-// Method to handle toggle change on a generator
-const toggleGenerator = async (gen: GenItem) => {
-  try {
-    await updateGenOnOff([String(gen.id)]);
-    console.log(`Updated generator ${gen.id} status to ${gen.isOn ? 'ON' : 'OFF'}`);
-  } catch (err) {
-    console.error(`Failed to update generator ${gen.id} status`, err);
-  }
+// Method to handle toggle prompt confirmation alert
+const promptToggle = async (gen: GenItem) => {
+  const targetState = !gen.isOn;
+  const alert = await alertController.create({
+    header: 'Alert',
+    message: targetState ? 'Do you want to turn ON the generator?' : 'Do you want to turn OFF the generator?',
+    buttons: [
+      {
+        text: 'No',
+        role: 'cancel'
+      },
+      {
+        text: 'Yes',
+        handler: async () => {
+          gen.isOn = targetState;
+          gen.isPending = true;
+          try {
+            await updateGenOnOff([String(gen.id)]);
+          } catch (err) {
+            console.error('Failed to update generator status', err);
+          }
+        }
+      }
+    ]
+  });
+  await alert.present();
 };
 
 // Method for the "Cancel" action
-const cancelAction = async (id: number | string) => {
+const cancelAction = async (gen: GenItem) => {
   const alert = await alertController.create({
-    header: 'Confirm Cancel',
-    message: `Cancel operation for generator #${id}?`,
-    buttons: ['Dismiss', 'OK']
+    header: 'Alert',
+    message: 'Do you want to cancel the previous ON/OFF request?',
+    buttons: [
+      {
+        text: 'No',
+        role: 'cancel'
+      },
+      {
+        text: 'Yes',
+        handler: async () => {
+          gen.isPending = false;
+          try {
+            await updateGenOnOff([String(gen.id)]);
+          } catch (err) {
+            console.error('Failed to cancel request', err);
+          }
+        }
+      }
+    ]
   });
   await alert.present();
 };
@@ -463,5 +500,17 @@ ion-toggle.small-toggle {
   color: var( --ion-color-paleSalmon); /* paleSalmon */
   font-family: 'Rajdhani', sans-serif;
   font-size: 16px;
+}
+
+@keyframes upDownTimer {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0px); }
+}
+.pending-timer-icon {
+  color: #fdcf9f;
+  font-size: 15px;
+  animation: upDownTimer 1s infinite ease-in-out;
+  margin-left: 4px;
 }
 </style>

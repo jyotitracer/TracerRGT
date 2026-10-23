@@ -27,6 +27,16 @@ const storage =
 
     async clear() {
         await Preferences.clear();
+        try {
+            const deviceToken = localStorage.getItem('deviceToken');
+            const hasSeenPrivacyPolicy = localStorage.getItem('RhasSeenPrivacyPolicy');
+            localStorage.clear();
+            sessionStorage.clear();
+            if (deviceToken) localStorage.setItem('deviceToken', deviceToken);
+            if (hasSeenPrivacyPolicy) localStorage.setItem('RhasSeenPrivacyPolicy', hasSeenPrivacyPolicy);
+        } catch (e) {
+            console.error('Error clearing browser storage:', e);
+        }
     }
 };
 

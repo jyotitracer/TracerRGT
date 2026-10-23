@@ -25,7 +25,14 @@
     </div>
 
     <ion-content class="help-content-bg" :fullscreen="false">
-      <div class="swiper-container" v-if="slides.length > 0">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="loading-state">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+        <p>Loading help content for Page #{{ targetPageId }}...</p>
+      </div>
+
+      <!-- Slides Content -->
+      <div class="swiper-container" v-else-if="slides.length > 0">
         <swiper
           :modules="[Pagination]"
           :slides-per-view="1"
@@ -38,7 +45,7 @@
         >
           <swiper-slide v-for="(slide, index) in slides" :key="index">
             <div class="slide-content">
-              <div class="image-wrapper">
+              <div class="image-wrapper" v-if="slide.imagelink">
                 <img
                   class="slide-image"
                   :src="slide.imagelink"
@@ -83,10 +90,10 @@
         </div>
       </div>
 
-      <!-- Loading / Empty State -->
-      <div v-else class="loading-state">
-        <ion-spinner name="crescent" color="warning"></ion-spinner>
-        <p>Loading help content for Page #{{ targetPageId }}...</p>
+      <!-- Empty State -->
+      <div v-else class="empty-state">
+        <ion-icon :icon="helpCircleOutline" class="empty-icon"></ion-icon>
+        <p class="empty-text">No help content available</p>
       </div>
     </ion-content>
   </ion-page>
@@ -109,7 +116,7 @@ import {
   IonSpinner,
   loadingController,
 } from '@ionic/vue';
-import { arrowBack } from 'ionicons/icons';
+import { arrowBack, helpCircleOutline } from 'ionicons/icons';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import { getHelpScreen } from '@/services/ApiService';
@@ -128,6 +135,7 @@ interface SlideItem {
 }
 
 const slides = ref<SlideItem[]>([]);
+const isLoading = ref(false);
 const swiperRef = ref<any>(null);
 const swiperInstance = ref<any>(null);
 const currentIndex = ref(0);
@@ -160,123 +168,9 @@ const screenTitle = computed(() => {
   }
 });
 
-// Fallback guide slides for all 5 Android RGT screens
-const getDefaultSlides = (pageId: number): SlideItem[] => {
-  switch (pageId) {
-    case 1:
-      return [
-        {
-          srno: '1',
-          page_id: '1',
-          headername: 'Fleet Overview & Site Selection',
-          imagelink: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
-          description: 'View total generator count, active ON/OFF status, and switch between sites (e.g. PMVE, J#327) using the horizontal site carousel.',
-        },
-        {
-          srno: '2',
-          page_id: '1',
-          headername: 'Generator Cards & Real-Time Status',
-          imagelink: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80',
-          description: 'Each generator item displays its capacity, model, and active state (ON/OFF/Offline). Tap any card to view detailed telemetry metrics.',
-        },
-        {
-          srno: '3',
-          page_id: '1',
-          headername: 'Telemetry Tabs: Power & 3-Phase',
-          imagelink: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=800&q=80',
-          description: 'Monitor active total power, dynamic gauge meters, and phase-by-phase breakdown for kW, kVA, kVAR, and Power Factor.',
-        },
-        {
-          srno: '4',
-          page_id: '1',
-          headername: 'Energy, RunHour, Engine & V/I Metrics',
-          imagelink: 'https://images.unsplash.com/photo-1498084393753-b411b2d26b34?auto=format&fit=crop&w=800&q=80',
-          description: 'Inspect Mains and Generator energy counters (kWh, kVAh), engine RPM, battery voltage, oil pressure, and line voltages.',
-        },
-      ];
-    case 2:
-      return [
-        {
-          srno: '1',
-          page_id: '2',
-          headername: 'Generator Alerts & Events',
-          imagelink: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
-          description: 'Review critical alerts, maintenance reminders, and operational events triggered across your generator fleet.',
-        },
-        {
-          srno: '2',
-          page_id: '2',
-          headername: 'Event Filtering & Search',
-          imagelink: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80',
-          description: 'Quickly find specific alarms by filtering by site, generator model, fault type, or timestamp.',
-        },
-      ];
-    case 3:
-      return [
-        {
-          srno: '1',
-          page_id: '3',
-          headername: 'Operational History & Logs',
-          imagelink: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
-          description: 'Export and examine comprehensive historical data, including run hours, voltage stability, and event logs.',
-        },
-        {
-          srno: '2',
-          page_id: '3',
-          headername: 'Fuel Filling & Consumption Analytics',
-          imagelink: 'https://images.unsplash.com/photo-1508873696983-2df5293cb32f?auto=format&fit=crop&w=800&q=80',
-          description: 'Track fuel fill events, sudden drops, and consumption trends across custom date ranges with interactive charts.',
-        },
-      ];
-    case 4:
-      return [
-        {
-          srno: '1',
-          page_id: '4',
-          headername: 'Fleet GPS Map',
-          imagelink: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80',
-          description: 'Locate generators geographically with status-coded markers (Green for ON, Grey/Red for OFF).',
-        },
-        {
-          srno: '2',
-          page_id: '4',
-          headername: 'Marker Details & Navigation',
-          imagelink: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80',
-          description: 'Tap any marker on the map to view the generator name, address, coordinates, and instant status.',
-        },
-      ];
-    case 5:
-      return [
-        {
-          srno: '1',
-          page_id: '5',
-          headername: 'Remote Generator Control',
-          imagelink: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
-          description: 'Safely issue start and stop commands to authorized generators from anywhere with dual confirmation.',
-        },
-        {
-          srno: '2',
-          page_id: '5',
-          headername: 'Site & Generator Search',
-          imagelink: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80',
-          description: 'Use the dual search bars at the top to filter generators by Site or Generator Name instantly.',
-        },
-      ];
-    default:
-      return [
-        {
-          srno: '1',
-          page_id: String(pageId),
-          headername: 'TracerRGT Help Guide',
-          imagelink: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
-          description: 'Explore the full capabilities of TracerRGT Generator Management.',
-        },
-      ];
-  }
-};
-
-// Fetch slides data from API with fallback
+// Fetch slides data from API
 const fetchSlidesData = async () => {
+  isLoading.value = true;
   const loading = await loadingController.create({
     message: `Loading Guide (Page #${targetPageId.value})...`,
     duration: 3500,
@@ -298,11 +192,7 @@ const fetchSlidesData = async () => {
           srno: String(item.srno || idx + 1),
           page_id: String(item.page_id || pageToLoad),
           headername: item.headername || item.title || item.header_name || `Guide Step ${idx + 1}`,
-          imagelink:
-            item.imagelink ||
-            item.image ||
-            item.img ||
-            'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+          imagelink: item.imagelink || item.image || item.img || '',
           description: item.description || item.desc || '',
         }));
         currentIndex.value = 0;
@@ -310,14 +200,14 @@ const fetchSlidesData = async () => {
       }
     }
 
-    // Default fallback specific to this pageid
-    slides.value = getDefaultSlides(targetPageId.value);
+    slides.value = [];
     currentIndex.value = 0;
   } catch (error: any) {
     console.warn(`Error fetching help screen data for page #${targetPageId.value}:`, error);
-    slides.value = getDefaultSlides(targetPageId.value);
+    slides.value = [];
     currentIndex.value = 0;
   } finally {
+    isLoading.value = false;
     try {
       await loading.dismiss();
     } catch (e) {}
@@ -327,7 +217,7 @@ const fetchSlidesData = async () => {
 const onImageError = (event: Event, index: number) => {
   const target = event.target as HTMLImageElement;
   if (target) {
-    target.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80';
+    target.style.display = 'none';
   }
 };
 
@@ -341,7 +231,8 @@ onMounted(async () => {
     fetchSlidesData();
   } else {
     showToast();
-    slides.value = getDefaultSlides(targetPageId.value);
+    slides.value = [];
+    isLoading.value = false;
   }
 
   initNetworkListener();
@@ -554,6 +445,30 @@ const next = () => {
   gap: 16px;
   color: #a0998e;
   font-size: 14px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: 12px;
+  color: #a0998e;
+  text-align: center;
+  padding: 24px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #fdcf9f;
+  opacity: 0.7;
+}
+
+.empty-text {
+  font-size: 15px;
+  font-weight: 500;
+  color: #c4b9a9;
 }
 
 .network-status-bar {

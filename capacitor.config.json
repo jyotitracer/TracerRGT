@@ -1,0 +1,10 @@
+{
+  "appId": "in.co.tracer.tracerrgt",
+  "appName": "TracerRGT",
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

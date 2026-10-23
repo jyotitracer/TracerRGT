@@ -21,7 +21,7 @@ declare module '@/services/ApiService' {
   export const updateEventStatus: (arrData: any[], action?: number) => Promise<any>;
   export const getHelpScreen: (pageId?: number | string) => Promise<any>;
   export const getGeneratorOnOffList: (params?: any) => Promise<any>;
-  export const updateGenOnOff: (genArr: string[]) => Promise<any>;
+  export const updateGenOnOff: (genArr: any[], action?: string | number) => Promise<any>;
 }
 
 declare module '@/services/storagefile' {

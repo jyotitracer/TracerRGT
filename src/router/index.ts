@@ -14,6 +14,8 @@ import GeneratorSelectionPage from '@/views/ReportPages/GeneratorSelectionPage.v
 import EventSelectionPage from '@/views/ReportPages/EventSelectionPage.vue';
 import FuelFillingdropping from '@/views/ReportPages/FuelFillingdropping.vue';
 import FuelChart from '@/views/ReportPages/FuelChart.vue';
+import SiteSingleSelectPage from '@/views/ReportPages/SiteSingleSelectPage.vue';
+import GenSingleSelectPage from '@/views/ReportPages/GenSingleSelectPage.vue';
 
 
 const routes: Array<RouteRecordRaw> = [
@@ -93,9 +95,29 @@ const routes: Array<RouteRecordRaw> = [
   component: SiteSelectionPage
 },
 {
+  path: '/event-select-sites',
+  name: 'EventSelectSites',
+  component: SiteSelectionPage
+},
+{
+  path: '/fuel-select-sites',
+  name: 'FuelSelectSites',
+  component: SiteSelectionPage
+},
+{
   path: '/select-generator',
   name: 'SelectGenerator',
-  component:GeneratorSelectionPage
+  component: GeneratorSelectionPage
+},
+{
+  path: '/event-select-generator',
+  name: 'EventSelectGenerator',
+  component: GeneratorSelectionPage
+},
+{
+  path: '/fuel-select-generator',
+  name: 'FuelSelectGenerator',
+  component: GeneratorSelectionPage
 },
 {
   path: '/select-events',
@@ -113,6 +135,16 @@ const routes: Array<RouteRecordRaw> = [
     name: 'fuelChart', // This name MUST match the one used in router.push
     component: FuelChart
   },
+{
+  path: '/select-site-single',
+  name: 'SelectSiteSingle',
+  component: SiteSingleSelectPage
+},
+{
+  path: '/select-generator-single',
+  name: 'SelectGeneratorSingle',
+  component: GenSingleSelectPage
+},
 ]
 
 import storage from '@/services/storagefile';
