@@ -192,60 +192,59 @@
                         <div class="slide-title">Power - Total</div>
                         <div class="gauges-2x2-grid">
                           <!-- 1. kW Gauge -->
-                          <div class="gauge-card" :class="{ 'power-out-of-event-range': isOutOfEventRange(powerTotalData.kw, powerTotalData.kwEveMin, powerTotalData.kwEveMax) }">
-                            <div class="gauge-wrapper">
-                              <svg viewBox="0 0 100 58" class="gauge-svg">
-                                <path d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="rgba(255, 255, 255, 0.15)" stroke-width="7" stroke-linecap="round" />
-                                <path :d="gaugeArc(powerTotalData.kw, powerTotalData.kwRangeMax, powerTotalData.kwRangeMin)" fill="none" stroke="var(--ion-color-primary, #f59c20)" stroke-width="7" stroke-linecap="round" />
-                              </svg>
-                              <div class="gauge-content">
-                                <div class="gauge-value">{{ powerTotalData.kw }}</div>
-                                <div class="gauge-unit">{{ powerTotalData.kwUnit }}</div>
+                          <div class="gauge-card">
+                            <div class="circular-gauge-wrapper">
+                              <img src="/cgb.png" class="circular-gauge-bg" alt="kw bg" />
+                              <img :src="powerTotalData.kwGaugeImg" class="circular-gauge-fill" alt="kw fill" />
+                              <div class="circular-gauge-content">
+                                <div class="circular-gauge-val" :class="{ 'power-alert-color': powerTotalData.kwAlert === 1 }">{{ powerTotalData.kw }}</div>
+                                <div class="circular-gauge-unit" :class="{ 'power-alert-color': powerTotalData.kwAlert === 1 }">{{ powerTotalData.kwUnit }}</div>
                               </div>
+                              <img v-if="powerTotalData.kwAlertImg" :src="powerTotalData.kwAlertImg" class="power-alert-badge" alt="kw alert" />
                             </div>
                           </div>
 
                           <!-- 2. kVA Gauge -->
                           <div class="gauge-card">
-                            <div class="gauge-wrapper">
-                              <svg viewBox="0 0 100 58" class="gauge-svg">
-                                <path d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="rgba(255, 255, 255, 0.15)" stroke-width="7" stroke-linecap="round" />
-                                <path :d="gaugeArc(powerTotalData.kva, currentRatedKva)" fill="none" stroke="var(--ion-color-primary, #f59c20)" stroke-width="7" stroke-linecap="round" />
-                              </svg>
-                              <div class="gauge-content">
-                                <div class="gauge-value">{{ powerTotalData.kva }}</div>
-                                <div class="gauge-unit">kVA</div>
+                            <div class="circular-gauge-wrapper">
+                              <img src="/cgb.png" class="circular-gauge-bg" alt="kva bg" />
+                              <img :src="powerTotalData.kvaGaugeImg" class="circular-gauge-fill" alt="kva fill" />
+                              <div class="circular-gauge-content">
+                                <div class="circular-gauge-val" :class="{ 'power-alert-color': powerTotalData.kvaAlert === 1 }">{{ powerTotalData.kva }}</div>
+                                <div class="circular-gauge-unit" :class="{ 'power-alert-color': powerTotalData.kvaAlert === 1 }">{{ powerTotalData.kvaUnit }}</div>
                               </div>
+                              <img v-if="powerTotalData.kvaAlertImg" :src="powerTotalData.kvaAlertImg" class="power-alert-badge" alt="kva alert" />
                             </div>
                           </div>
 
                           <!-- 3. kVAR Gauge -->
                           <div class="gauge-card">
-                            <div class="gauge-wrapper">
-                              <svg viewBox="0 0 100 58" class="gauge-svg">
-                                <path d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="rgba(255, 255, 255, 0.15)" stroke-width="7" stroke-linecap="round" />
-                                <path :d="gaugeArc(powerTotalData.kvar, currentRatedKva * 0.75)" fill="none" stroke="var(--ion-color-primary, #f59c20)" stroke-width="7" stroke-linecap="round" />
-                              </svg>
-                              <div class="gauge-content">
-                                <div class="gauge-value">{{ powerTotalData.kvar }}</div>
-                                <div class="gauge-unit">kVAR</div>
+                            <div class="circular-gauge-wrapper">
+                              <img src="/cgb.png" class="circular-gauge-bg" alt="kvar bg" />
+                              <img :src="powerTotalData.kvarGaugeImg" class="circular-gauge-fill" alt="kvar fill" />
+                              <div class="circular-gauge-content">
+                                <div class="circular-gauge-val" :class="{ 'power-alert-color': powerTotalData.kvarAlert === 1 }">{{ powerTotalData.kvar }}</div>
+                                <div class="circular-gauge-unit" :class="{ 'power-alert-color': powerTotalData.kvarAlert === 1 }">{{ powerTotalData.kvarUnit }}</div>
                               </div>
+                              <img v-if="powerTotalData.kvarAlertImg" :src="powerTotalData.kvarAlertImg" class="power-alert-badge" alt="kvar alert" />
                             </div>
                           </div>
 
-                          <!-- 4. pf LAG Gauge -->
+                          <!-- 4. pf Gauge -->
                           <div class="gauge-card">
-                            <div class="gauge-wrapper">
-                              <svg viewBox="0 0 100 58" class="gauge-svg">
-                                <path d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="rgba(255, 255, 255, 0.15)" stroke-width="7" stroke-linecap="round" />
-                                <path :d="gaugeArc(powerTotalData.pf, 1.0)" fill="none" stroke="var(--ion-color-primary, #f59c20)" stroke-width="7" stroke-linecap="round" />
-                              </svg>
-                              <div class="gauge-content">
-                                <div class="gauge-value">{{ powerTotalData.pf }}</div>
-                                <div class="gauge-unit">pf <span class="gauge-lag">{{ powerTotalData.pfLabel }}</span></div>
+                            <div class="circular-gauge-wrapper">
+                              <img :src="powerTotalData.pfGaugeImg" class="circular-gauge-bg" alt="pf icon" />
+                              <div class="circular-gauge-content1">
+                                <div class="circular-gauge-val" :class="{ 'power-alert-color': powerTotalData.pfAlert === 1 }">{{ powerTotalData.pf }}</div>
+                                <div class="circular-gauge-unit" :class="{ 'power-alert-color': powerTotalData.pfAlert === 1 }">
+                                  {{ powerTotalData.pfUnit }}
+                                  <span v-if="powerTotalData.showPfLag" class="pf-lag-text">{{ powerTotalData.pfLabel }}</span>
+                                </div>
                               </div>
+                              <img v-if="powerTotalData.pfAlertImg" :src="powerTotalData.pfAlertImg" class="power-alert-badge" alt="pf alert" />
                             </div>
                           </div>
+
                         </div>
                       </div>
                     </swiper-slide>
@@ -258,24 +257,60 @@
                           <ion-row>
                             <ion-col>
                               <div class="data-header">P1</div>
-                              <div class="data-row"><span>{{ power3PhaseData.p1.pf }}</span> <span class="data-unit">pf</span></div>
-                              <div class="data-row" :class="{ 'power-out-of-event-range': isOutOfEventRange(power3PhaseData.p1.kw, power3PhaseData.p1.kwEveMin, power3PhaseData.p1.kwEveMax) }"><span>{{ power3PhaseData.p1.kw }}</span> <span class="data-unit">{{ power3PhaseData.p1.kwUnit }}</span></div>
-                              <div class="data-row"><span>{{ power3PhaseData.p1.kva }}</span> <span class="data-unit">kVA</span></div>
-                              <div class="data-row"><span>{{ power3PhaseData.p1.kvar }}</span> <span class="data-unit">kVAR</span></div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p1.pfAlert === 1 }">
+                                <span>{{ power3PhaseData.p1.pf }}</span> <span class="data-unit">{{ power3PhaseData.p1.pfUnit }}</span>
+                                <img v-if="power3PhaseData.p1.pfAlertImg" :src="power3PhaseData.p1.pfAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p1.kwAlert === 1 }">
+                                <span>{{ power3PhaseData.p1.kw }}</span> <span class="data-unit">{{ power3PhaseData.p1.kwUnit }}</span>
+                                <img v-if="power3PhaseData.p1.kwAlertImg" :src="power3PhaseData.p1.kwAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p1.kvaAlert === 1 }">
+                                <span>{{ power3PhaseData.p1.kva }}</span> <span class="data-unit">{{ power3PhaseData.p1.kvaUnit }}</span>
+                                <img v-if="power3PhaseData.p1.kvaAlertImg" :src="power3PhaseData.p1.kvaAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p1.kvarAlert === 1 }">
+                                <span>{{ power3PhaseData.p1.kvar }}</span> <span class="data-unit">{{ power3PhaseData.p1.kvarUnit }}</span>
+                                <img v-if="power3PhaseData.p1.kvarAlertImg" :src="power3PhaseData.p1.kvarAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
                             </ion-col>
                             <ion-col>
                               <div class="data-header">P2</div>
-                              <div class="data-row"><span>{{ power3PhaseData.p2.pf }}</span> <span class="data-unit">pf</span></div>
-                              <div class="data-row" :class="{ 'power-out-of-event-range': isOutOfEventRange(power3PhaseData.p2.kw, power3PhaseData.p2.kwEveMin, power3PhaseData.p2.kwEveMax) }"><span>{{ power3PhaseData.p2.kw }}</span> <span class="data-unit">{{ power3PhaseData.p2.kwUnit }}</span></div>
-                              <div class="data-row"><span>{{ power3PhaseData.p2.kva }}</span> <span class="data-unit">kVA</span></div>
-                              <div class="data-row"><span>{{ power3PhaseData.p2.kvar }}</span> <span class="data-unit">kVAR</span></div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p2.pfAlert === 1 }">
+                                <span>{{ power3PhaseData.p2.pf }}</span> <span class="data-unit">{{ power3PhaseData.p2.pfUnit }}</span>
+                                <img v-if="power3PhaseData.p2.pfAlertImg" :src="power3PhaseData.p2.pfAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p2.kwAlert === 1 }">
+                                <span>{{ power3PhaseData.p2.kw }}</span> <span class="data-unit">{{ power3PhaseData.p2.kwUnit }}</span>
+                                <img v-if="power3PhaseData.p2.kwAlertImg" :src="power3PhaseData.p2.kwAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p2.kvaAlert === 1 }">
+                                <span>{{ power3PhaseData.p2.kva }}</span> <span class="data-unit">{{ power3PhaseData.p2.kvaUnit }}</span>
+                                <img v-if="power3PhaseData.p2.kvaAlertImg" :src="power3PhaseData.p2.kvaAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p2.kvarAlert === 1 }">
+                                <span>{{ power3PhaseData.p2.kvar }}</span> <span class="data-unit">{{ power3PhaseData.p2.kvarUnit }}</span>
+                                <img v-if="power3PhaseData.p2.kvarAlertImg" :src="power3PhaseData.p2.kvarAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
                             </ion-col>
                             <ion-col>
                               <div class="data-header">P3</div>
-                              <div class="data-row"><span>{{ power3PhaseData.p3.pf }}</span> <span class="data-unit">pf</span></div>
-                              <div class="data-row" :class="{ 'power-out-of-event-range': isOutOfEventRange(power3PhaseData.p3.kw, power3PhaseData.p3.kwEveMin, power3PhaseData.p3.kwEveMax) }"><span>{{ power3PhaseData.p3.kw }}</span> <span class="data-unit">{{ power3PhaseData.p3.kwUnit }}</span></div>
-                              <div class="data-row"><span>{{ power3PhaseData.p3.kva }}</span> <span class="data-unit">kVA</span></div>
-                              <div class="data-row"><span>{{ power3PhaseData.p3.kvar }}</span> <span class="data-unit">kVAR</span></div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p3.pfAlert === 1 }">
+                                <span>{{ power3PhaseData.p3.pf }}</span> <span class="data-unit">{{ power3PhaseData.p3.pfUnit }}</span>
+                                <img v-if="power3PhaseData.p3.pfAlertImg" :src="power3PhaseData.p3.pfAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p3.kwAlert === 1 }">
+                                <span>{{ power3PhaseData.p3.kw }}</span> <span class="data-unit">{{ power3PhaseData.p3.kwUnit }}</span>
+                                <img v-if="power3PhaseData.p3.kwAlertImg" :src="power3PhaseData.p3.kwAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p3.kvaAlert === 1 }">
+                                <span>{{ power3PhaseData.p3.kva }}</span> <span class="data-unit">{{ power3PhaseData.p3.kvaUnit }}</span>
+                                <img v-if="power3PhaseData.p3.kvaAlertImg" :src="power3PhaseData.p3.kvaAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
+                              <div class="data-row" :class="{ 'power-alert-color': power3PhaseData.p3.kvarAlert === 1 }">
+                                <span>{{ power3PhaseData.p3.kvar }}</span> <span class="data-unit">{{ power3PhaseData.p3.kvarUnit }}</span>
+                                <img v-if="power3PhaseData.p3.kvarAlertImg" :src="power3PhaseData.p3.kvarAlertImg" class="phase-alert-badge" alt="alert" />
+                              </div>
                             </ion-col>
                           </ion-row>
                         </ion-grid>
@@ -324,51 +359,91 @@
                         <div class="slide-title">Engine</div>
                         <ion-grid class="engine-grid">
                           <!-- Top Row -->
-                          <ion-row>
+                          <ion-row class="ion-align-items-center">
+                            <!-- 1. Battery -->
                             <ion-col size="3.5">
                               <div class="engine-item">
-                                <div class="engine-value-large">{{ engineData.battery.voltage }}</div>
-                                <ion-icon class="engine-icon" :icon="batteryChargingOutline"></ion-icon>
+                                <div class="engine-val-top" :class="{ 'power-alert-color': engineData.battery.isAlert }">{{ engineData.battery.voltage }}</div>
+                                <div class="engine-vbar-container">
+                                  <img src="/vbgb.png" class="engine-vbar-bg" alt="batt vbar bg" />
+                                  <img :src="engineData.battery.gaugeImg" class="engine-vbar-fill" alt="batt gauge" />
+                                  <img v-if="engineData.battery.alertImg" :src="engineData.battery.alertImg" class="engine-alert-badge" alt="batt alert" />
+                                </div>
+                                <img src="/icon_batt.png" class="engine-item-icon" alt="battery" />
                                 <div class="engine-label-small">BATTERY</div>
                               </div>
                             </ion-col>
+
+                            <!-- 2. RPM -->
                             <ion-col size="5">
                               <div class="engine-item">
-                                <div class="rpm-gauge">
-                                  <div class="rpm-value">{{ engineData.rpm }}</div>
-                                  <div class="rpm-unit">rpm</div>
+                                <div class="rpm-gauge-wrapper">
+                                  <img src="/cgb.png" class="rpm-circle-bg" alt="rpm bg" />
+                                  <img :src="engineData.rpmGaugeImg" class="rpm-circle-fill" alt="rpm gauge" />
+                                  <div class="rpm-inner-text">
+                                    <div class="rpm-value" :class="{ 'power-alert-color': engineData.rpmAlert }">{{ engineData.rpm }}</div>
+                                    <div class="rpm-unit" :class="{ 'power-alert-color': engineData.rpmAlert }">{{ engineData.rpmUnit || 'rpm' }}</div>
+                                  </div>
+                                  <img v-if="engineData.rpmAlertImg" :src="engineData.rpmAlertImg" class="engine-alert-badge rpm-alert" alt="rpm alert" />
                                 </div>
                               </div>
                             </ion-col>
+
+                            <!-- 3. Fuel -->
                             <ion-col size="3.5">
                               <div class="engine-item">
-                                <div class="engine-value-large">{{ engineData.fuel.levelValue }}</div>
-                                <ion-icon class="engine-icon" :icon="funnelOutline"></ion-icon>
+                                <div class="engine-val-top" :class="{ 'power-alert-color': engineData.fuel.isAlert }">{{ engineData.fuel.levelValue }}</div>
+                                <div class="engine-vbar-container">
+                                  <img src="/vbgb.png" class="engine-vbar-bg" alt="fuel vbar bg" />
+                                  <img :src="engineData.fuel.gaugeImg" class="engine-vbar-fill" alt="fuel gauge" />
+                                  <img v-if="engineData.fuel.alertImg" :src="engineData.fuel.alertImg" class="engine-alert-badge" alt="fuel alert" />
+                                </div>
+                                <img src="/icon_fuel.png" class="engine-item-icon" alt="fuel" />
                                 <div class="engine-label-small">FUEL</div>
                               </div>
                             </ion-col>
                           </ion-row>
 
                           <!-- Bottom Row -->
-                          <ion-row class="ion-align-items-start">
+                          <ion-row class="ion-align-items-center">
+                            <!-- 4. Oil Pressure -->
                             <ion-col size="4">
                               <div class="engine-item">
-                                <div class="engine-value-small">{{ engineData.oilPressure }}</div>
-                                <ion-icon class="engine-icon" :icon="swapVerticalOutline"></ion-icon>
+                                <div class="engine-val-top" :class="{ 'power-alert-color': engineData.oilPresAlert }">{{ engineData.oilPressure }}</div>
+                                <div class="engine-vbar-container">
+                                  <img src="/vbgb.png" class="engine-vbar-bg" alt="oil pres vbar bg" />
+                                  <img :src="engineData.oilPresGaugeImg" class="engine-vbar-fill" alt="oil pres gauge" />
+                                  <img v-if="engineData.oilPresAlertImg" :src="engineData.oilPresAlertImg" class="engine-alert-badge" alt="oil pres alert" />
+                                </div>
+                                <img src="/icon_oil_pres.png" class="engine-item-icon" alt="oil pressure" />
                                 <div class="engine-label-small">OIL PRES</div>
                               </div>
                             </ion-col>
+
+                            <!-- 5. Oil Temp -->
                             <ion-col size="4">
                               <div class="engine-item">
-                                <div class="engine-value-small">{{ engineData.oilTemp }}</div>
-                                <ion-icon class="engine-icon" :icon="thermometerOutline"></ion-icon>
+                                <div class="engine-val-top" :class="{ 'power-alert-color': engineData.oilTempAlert }">{{ engineData.oilTemp }}</div>
+                                <div class="engine-vbar-container">
+                                  <img src="/vbgb.png" class="engine-vbar-bg" alt="oil temp vbar bg" />
+                                  <img :src="engineData.oilTempGaugeImg" class="engine-vbar-fill" alt="oil temp gauge" />
+                                  <img v-if="engineData.oilTempAlertImg" :src="engineData.oilTempAlertImg" class="engine-alert-badge" alt="oil temp alert" />
+                                </div>
+                                <img src="/icon_oil_temp.png" class="engine-item-icon" alt="oil temp" />
                                 <div class="engine-label-small">OIL TEMP</div>
                               </div>
                             </ion-col>
+
+                            <!-- 6. Coolant Temp -->
                             <ion-col size="4">
                               <div class="engine-item">
-                                <div class="engine-value-small">{{ engineData.coolantTemp }}</div>
-                                <ion-icon class="engine-icon" :icon="waterOutline"></ion-icon>
+                                <div class="engine-val-top" :class="{ 'power-alert-color': engineData.coolTempAlert }">{{ engineData.coolantTemp }}</div>
+                                <div class="engine-vbar-container">
+                                  <img src="/vbgb.png" class="engine-vbar-bg" alt="cool temp vbar bg" />
+                                  <img :src="engineData.coolantTempGaugeImg" class="engine-vbar-fill" alt="coolant temp gauge" />
+                                  <img v-if="engineData.coolantTempAlertImg" :src="engineData.coolantTempAlertImg" class="engine-alert-badge" alt="cool temp alert" />
+                                </div>
+                                <img src="/icon_cool_temp.png" class="engine-item-icon" alt="coolant temp" />
                                 <div class="engine-label-small">COOLANT TEMP</div>
                               </div>
                             </ion-col>
@@ -385,20 +460,26 @@
                         <div class="slide-title">{{ slide.title }}</div>
 
                         <!-- Layout 1 & 2: Simple List or List with Indicator -->
-                        <div v-if="slide.type === 'simple-list' || slide.type === 'list-with-indicator'" class="vi-list-container">
-                          <template v-for="(item, index) in slide.items" :key="item.label">
-                            <div class="vi-item">
-                              <div class="vi-text-content">
-                                <div class="vi-label">{{ item.label }}</div>
-                                <div class="vi-value">{{ item.value }}</div>
-                              </div>
-                              <div v-if="slide.type === 'list-with-indicator'" class="level-indicator-wrapper">
-                                <div class="level-indicator-bar" :style="{ width: Math.max(5, Math.min(100, (item.level * 100))) + '%' }"></div>
-                              </div>
-                            </div>
-                            <hr v-if="index < slide.items.length - 1" class="divider"/>
-                          </template>
-                        </div>
+                      <!-- Around line 463 to 476 -->
+<div v-if="slide.type === 'simple-list' || slide.type === 'list-with-indicator'" class="vi-list-container">
+  <template v-for="(item, index) in slide.items" :key="item.label">
+    <div class="vi-item">
+      <div class="vi-text-content">
+        <div class="vi-label">{{ item.label }}</div>
+        <div class="vi-value" :class="{ 'vi-alert-color': item.isAlert }">
+          {{ item.value }}
+          <img v-if="item.alertImg" :src="item.alertImg" class="vi-alert-badge" alt="alarm" />
+        </div>
+      </div>
+      <div v-if="slide.type === 'list-with-indicator'" class="vi-barchart-container">
+        <img src="/bgb.png" class="vi-barchart-bg" alt="barchart bg" />
+        <img :src="item.gaugeImg || '/bgg_0.png'" class="vi-barchart-fill" alt="barchart fill" />
+      </div>
+    </div>
+    <hr v-if="index < slide.items.length - 1" class="divider"/>
+  </template>
+</div>
+
 
                         <!-- Layout 3: Dual Column Grid (Voltage) -->
                         <div v-if="slide.type === 'dual-column'" class="voltage-grid-container">
@@ -409,7 +490,10 @@
                                   <div class="vi-item">
                                     <div class="vi-text-content">
                                       <div class="vi-label">{{ slide.leftColumn[index].label }}</div>
-                                      <div class="vi-value">{{ slide.leftColumn[index].value }}</div>
+                                      <div class="vi-value" :class="{ 'vi-alert-color': slide.leftColumn[index].isAlert }">
+                                        {{ slide.leftColumn[index].value }}
+                                        <img v-if="slide.leftColumn[index].alertImg" :src="slide.leftColumn[index].alertImg" class="vi-alert-badge" alt="alarm" />
+                                      </div>
                                     </div>
                                   </div>
                                 </ion-col>
@@ -417,7 +501,10 @@
                                   <div class="vi-item">
                                     <div class="vi-text-content">
                                       <div class="vi-label">{{ slide.rightColumn[index].label }}</div>
-                                      <div class="vi-value">{{ slide.rightColumn[index].value }}</div>
+                                      <div class="vi-value" :class="{ 'vi-alert-color': slide.rightColumn[index].isAlert }">
+                                        {{ slide.rightColumn[index].value }}
+                                        <img v-if="slide.rightColumn[index].alertImg" :src="slide.rightColumn[index].alertImg" class="vi-alert-badge" alt="alarm" />
+                                      </div>
                                     </div>
                                   </div>
                                 </ion-col>
@@ -810,8 +897,12 @@ const onGenDetailImgError = (event: Event) => {
 // Apply baseline telemetry values (clean zero states until live server data arrives)
 const applyTelemetryBaseline = (isRunning: boolean, ratedKw: number, ratedKva: number, gen: any) => {
   powerTotalData.value = {
-    kw: '0.0', kwUnit: 'kW', kwRangeMin: 0, kwRangeMax: ratedKw || 1, kwEveMin: Number.NaN, kwEveMax: Number.NaN,
-    kva: '0.0', kvar: '0.0', pf: '0.00', pfLabel: 'LAG'
+    kw: '0.0', kwUnit: 'kW', kwAlert: 0, kwAlertImg: null, kwGaugeImg: '/cgg_0.png',
+    kva: '0.0', kvaUnit: 'kVA', kwRangeMin: 0, kwRangeMax: ratedKw || 1, kwEveMin: Number.NaN, kwEveMax: Number.NaN,
+    kvaAlert: 0, kvaAlertImg: null, kvaGaugeImg: '/cgg_0.png',
+    kvar: '0.0', kvarUnit: 'kVAR', kvarAlert: 0, kvarAlertImg: null, kvarGaugeImg: '/cgg_0.png',
+    pf: '0.0', pfUnit: 'pf', pfAlert: 0, pfAlertImg: null, pfGaugeImg: '/pf_0.png',
+    pfLabel: 'LAG', showPfLag: true,
   };
 
   power3PhaseData.value = {
@@ -822,17 +913,17 @@ const applyTelemetryBaseline = (isRunning: boolean, ratedKw: number, ratedKva: n
 
   energySlidesData.value = [
     {
-      id: 'mains',
-      title: 'Energy - Mains',
+      id: 'generator',
+      title: 'Energy - Generator',
       items: [
         { label: 'ACTIVE', value: '0.0 kWh', isHighlighted: true },
         { label: 'APPARENT', value: '0.0 kVAh', isHighlighted: false },
         { label: 'REACTIVE', value: '0.0 kVARh', isHighlighted: false },
       ],
     },
-    {
-      id: 'generator',
-      title: 'Energy - Generator',
+      {
+      id: 'mains',
+      title: 'Energy - Mains',
       items: [
         { label: 'ACTIVE', value: '0.0 kWh', isHighlighted: true },
         { label: 'APPARENT', value: '0.0 kVAh', isHighlighted: false },
@@ -853,15 +944,7 @@ const applyTelemetryBaseline = (isRunning: boolean, ratedKw: number, ratedKva: n
   }
 
   runHourSlidesData.value = [
-    {
-      id: 'mains',
-      title: 'RunHour - Mains',
-      items: [
-        { label: 'TOTAL', value: '0 hr 0 min 0 sec' },
-        { label: 'TODAY', value: '0 hr 0 min 0 sec' },
-        { label: 'TRIP',  value: '0 hr 0 min 0 sec' },
-      ],
-    },
+   
     {
       id: 'generator',
       title: 'RunHour - Generator',
@@ -871,15 +954,37 @@ const applyTelemetryBaseline = (isRunning: boolean, ratedKw: number, ratedKva: n
         { label: 'TRIP',  value: isRunning ? todayStr : '0 hr 0 min 0 sec' },
       ],
     },
+     {
+      id: 'mains',
+      title: 'RunHour - Mains',
+      items: [
+        { label: 'TOTAL', value: '0 hr 0 min 0 sec' },
+        { label: 'TODAY', value: '0 hr 0 min 0 sec' },
+        { label: 'TRIP',  value: '0 hr 0 min 0 sec' },
+      ],
+    },
   ];
 
   engineData.value = {
-    battery: { voltage: '0.0 V', level: 0 },
+    battery: { voltage: '0.0 V', isAlert: false, gaugeImg: '/vbgg_0.png', alertImg: null as string | null, level: 0 },
     oilPressure: '0.0 Kpa',
-    rpm: '0',
+    oilPresAlert: false,
+    oilPresGaugeImg: '/vbgg_0.png',
+    oilPresAlertImg: null as string | null,
+    rpm: '0.0',
+    rpmUnit: 'rpm',
+    rpmAlert: false,
+    rpmGaugeImg: '/cgg_0.png',
+    rpmAlertImg: null as string | null,
     oilTemp: '0.0 °C',
-    fuel: { levelValue: '0.0 L', level: 0 },
+    oilTempAlert: false,
+    oilTempGaugeImg: '/vbgg_0.png',
+    oilTempAlertImg: null as string | null,
+    fuel: { levelValue: '0.0 L', isAlert: false, gaugeImg: '/vbgg_0.png', alertImg: null as string | null, level: 0 },
     coolantTemp: '0.0 °C',
+    coolTempAlert: false,
+    coolantTempGaugeImg: '/vbgg_0.png',
+    coolantTempAlertImg: null as string | null,
   };
 
   vAndISlidesData.value = [
@@ -893,14 +998,14 @@ const applyTelemetryBaseline = (isRunning: boolean, ratedKw: number, ratedKva: n
         { label: 'L3', value: '0.0 Hz' },
       ],
     },
-    {
+       {
       id: 'current',
       title: 'Current',
       type: 'list-with-indicator',
       items: [
-        { label: 'L1', value: '0.0 A', level: 0 },
-        { label: 'L2', value: '0.0 A', level: 0 },
-        { label: 'L3', value: '0.0 A', level: 0 },
+        { label: 'L1', value: '0.0 A', gaugeImg: '/bgg_0.png' },
+        { label: 'L2', value: '0.0 A', gaugeImg: '/bgg_0.png' },
+        { label: 'L3', value: '0.0 A', gaugeImg: '/bgg_0.png' },
       ],
     },
     {
@@ -918,16 +1023,17 @@ const applyTelemetryBaseline = (isRunning: boolean, ratedKw: number, ratedKva: n
         { label: 'L3 - L1', value: '0.0 V' },
       ],
     },
-    {
+       {
       id: 'summary',
       title: 'Summary',
       type: 'list-with-indicator',
       items: [
-        { label: 'AVG. LINE VOLT', value: '0.0 V', level: 0 },
-        { label: 'AVG. PHASE VOLT', value: '0.0 V', level: 0 },
-        { label: 'TOTAL CURRENT', value: '0.0 A', level: 0 },
+        { label: 'AVG. LINE VOLT', value: '0.0 V', gaugeImg: '/bgg_0.png' },
+        { label: 'AVG. PHASE VOLT', value: '0.0 V', gaugeImg: '/bgg_0.png' },
+        { label: 'TOTAL CURRENT', value: '0.0 A', gaugeImg: '/bgg_0.png' },
       ],
     },
+
   ];
 };
 
@@ -950,12 +1056,119 @@ const applyServerTelemetry = (raw: any, isRunning: boolean, ratedKw: number, rat
     if (d.image || d.img || d.gen_image || d.image_url) selectedGenerator.value.image = d.image || d.img || d.gen_image || d.image_url;
   }
 
-  // 1. Power data comes from pars[].val_arr[] (e.g. Power -> Total/P1/P2/P3).
-  // Use nullish checks so a legitimate API value of 0 is not replaced by a fallback.
+  // 1. Helpers for gauge step calculation and alert icons
   const toNumber = (value: any, fallback = 0): number => {
     if (value === undefined || value === null || value === '') return fallback;
     const n = Number(value);
     return Number.isFinite(n) ? n : fallback;
+  };
+
+  const parseEve = (value: any): number | undefined => {
+    if (value === undefined || value === null) return undefined;
+    const str = String(value).trim();
+    if (str === '') return undefined;
+    const n = Number(str);
+    return Number.isFinite(n) ? n : undefined;
+  };
+
+  // Android get_gauge_vals ported from DBHelper.java
+  const getGaugeCalculation = (
+    val: number,
+    rangeMin: number,
+    rangeMax: number,
+    eveMin: number | undefined,
+    eveMax: number | undefined,
+    gaugeCounts: number,
+    alert = 0
+  ) => {
+    const v = Number.isFinite(val) ? val : 0;
+    const rMin = Number.isFinite(rangeMin) ? rangeMin : 0;
+    const rMax = Number.isFinite(rangeMax) && rangeMax > rMin ? rangeMax : Math.max(rMin + 1, 100);
+
+    const hasEveMin = eveMin !== undefined && eveMin !== null && Number.isFinite(eveMin);
+    const hasEveMax = eveMax !== undefined && eveMax !== null && Number.isFinite(eveMax);
+
+    // 1. Calculate actual value ticks matching Android:
+    const valTicks = Math.round(((v - rMin) / (rMax - rMin)) * gaugeCounts);
+
+    // 2. If event minimum <= rangeMin, no red for below range:
+    let eveMinMaxTicks = 0;
+    if (hasEveMin && (eveMin as number) > rMin) {
+      eveMinMaxTicks = Math.round((((eveMin as number) - rMin) / (rMax - rMin)) * gaugeCounts);
+    }
+
+    // 3. If event maximum >= rangeMax, no red for maximum (only green till end):
+    let rangeMaxTicks = gaugeCounts;
+    if (hasEveMax && (eveMax as number) < rMax) {
+      rangeMaxTicks = Math.round((((eveMax as number) - rMin) / (rMax - rMin)) * gaugeCounts);
+    }
+
+    // 4. Tick distribution matching Android DBHelper:
+    let firstRedTicks = 0;
+    let secondGreenTicks = 0;
+    let thirdRedTicks = 0;
+
+    if (valTicks > rangeMaxTicks) {
+      firstRedTicks = valTicks;
+      secondGreenTicks = rangeMaxTicks;
+      thirdRedTicks = eveMinMaxTicks;
+    } else {
+      if (eveMinMaxTicks > 0) {
+        if (valTicks > eveMinMaxTicks) {
+          firstRedTicks = 0;
+          secondGreenTicks = valTicks;
+          thirdRedTicks = eveMinMaxTicks;
+        } else {
+          firstRedTicks = 0;
+          secondGreenTicks = 0;
+          thirdRedTicks = valTicks;
+        }
+      } else {
+        firstRedTicks = 0;
+        secondGreenTicks = valTicks;
+        thirdRedTicks = 0;
+      }
+    }
+
+    const clamp = (t: number) => Math.max(0, Math.min(gaugeCounts, t));
+    const finalValStep = clamp(valTicks);
+
+    // Alert / out-of-range state:
+    // Alert flag is 1, OR value is above eveMax, OR value is at or below eveMin (when eveMin > rangeMin)
+    const isRed = alert === 1 ||
+      (hasEveMax && valTicks > rangeMaxTicks) ||
+      (hasEveMin && eveMinMaxTicks > 0 && valTicks <= eveMinMaxTicks);
+
+    return {
+      step: finalValStep,
+      isRed,
+      firstRedTicks: clamp(firstRedTicks),
+      secondGreenTicks: clamp(secondGreenTicks),
+      thirdRedTicks: clamp(thirdRedTicks),
+    };
+  };
+
+  const getCircularGauge = (val: number, min: number, max: number, eveMin?: number, eveMax?: number, alert = 0) => {
+    const calc = getGaugeCalculation(val, min, max, eveMin, eveMax, 20, alert);
+    return calc.isRed ? `/cgr_${calc.step}.png` : `/cgg_${calc.step}.png`;
+  };
+
+  const getVBarGauge = (val: number, min: number, max: number, eveMin?: number, eveMax?: number, alert = 0) => {
+    const calc = getGaugeCalculation(val, min, max, eveMin, eveMax, 8, alert);
+    return calc.isRed ? `/vbgr_${calc.step}.png` : `/vbgg_${calc.step}.png`;
+  };
+
+  const getBarGauge = (val: number, min: number, max: number, eveMin?: number, eveMax?: number, alert = 0) => {
+    const calc = getGaugeCalculation(val, min, max, eveMin, eveMax, 8, alert);
+    return calc.isRed ? `/bgr_${calc.step}.png` : `/bgg_${calc.step}.png`;
+  };
+
+  const getAlertBadge = (vio: any) => {
+    const v = Number(vio);
+    if (v >= 1 && v <= 4) {
+      return `/icon_alarm_bg_${v}.png`;
+    }
+    return null;
   };
 
   const root = raw?.data && !Array.isArray(raw.data) ? raw.data : raw;
@@ -972,25 +1185,76 @@ const applyServerTelemetry = (raw: any, isRunning: boolean, ratedKw: number, rat
 
   // Fallback keys are retained only for older API payloads without pars[].val_arr[].
   const kwNum = toNumber(totalRow?.kw_val ?? d.tot_kw ?? d.kw ?? d.active_kw);
+  const kwUnit = String(totalRow?.kw_unit ?? 'kW');
+  const kwAlert = Number(totalRow?.kw_alert ?? totalRow?.kwAlert ?? 0);
+  const kwVio = totalRow?.kw_vio ?? totalRow?.kwVio;
+  const kwRangeMin = toNumber(totalRow?.kw_range_min ?? totalRow?.kwRangeMin, 0);
+  const kwRangeMax = Math.max(toNumber(totalRow?.kw_range_max ?? totalRow?.kwRangeMax, ratedKw), 1);
+  const kwEveMin = parseEve(totalRow?.kw_eve_min ?? totalRow?.kwEveMin);
+  const kwEveMax = parseEve(totalRow?.kw_eve_max ?? totalRow?.kwEveMax);
+
   const kvaNum = toNumber(totalRow?.kva_val ?? d.tot_kva ?? d.kva ?? d.appar_kva);
+  const kvaUnit = String(totalRow?.kva_unit ?? 'kVA');
+  const kvaAlert = Number(totalRow?.kva_alert ?? totalRow?.kvaAlert ?? 0);
+  const kvaVio = totalRow?.kva_vio ?? totalRow?.kvaVio;
+  const kvaRangeMin = toNumber(totalRow?.kva_range_min ?? totalRow?.kvaRangeMin, 0);
+  const kvaRangeMax = Math.max(toNumber(totalRow?.kva_range_max ?? totalRow?.kvaRangeMax, ratedKva), 1);
+  const kvaEveMin = parseEve(totalRow?.kva_eve_min ?? totalRow?.kvaEveMin);
+  const kvaEveMax = parseEve(totalRow?.kva_eve_max ?? totalRow?.kvaEveMax);
+
   const kvarFallback = kvaNum > 0 && kwNum >= 0
     ? Math.sqrt(Math.max(0, kvaNum * kvaNum - kwNum * kwNum)) : 0;
   const kvarNum = toNumber(totalRow?.kvar_val ?? d.tot_kvar ?? d.kvar ?? d.react_kvar, kvarFallback);
+  const kvarUnit = String(totalRow?.kvar_unit ?? 'kVAR');
+  const kvarAlert = Number(totalRow?.kvar_alert ?? totalRow?.kvarAlert ?? 0);
+  const kvarVio = totalRow?.kvar_vio ?? totalRow?.kvarVio;
+  const kvarRangeMin = toNumber(totalRow?.kvar_range_min ?? totalRow?.kvarRangeMin, 0);
+  const kvarRangeMax = Math.max(toNumber(totalRow?.kvar_range_max ?? totalRow?.kvarRangeMax, ratedKva * 0.75), 1);
+  const kvarEveMin = parseEve(totalRow?.kvar_eve_min ?? totalRow?.kvarEveMin);
+  const kvarEveMax = parseEve(totalRow?.kvar_eve_max ?? totalRow?.kvarEveMax);
+
   const pfNum = toNumber(totalRow?.pf_val ?? d.tot_pf ?? d.pf ?? d.power_factor,
     kvaNum > 0 ? Math.min(1, kwNum / kvaNum) : 0);
-  const pfLabel = String(totalRow?.pf_type ?? d.pf_type ?? 'LAG').toUpperCase();
+  const pfUnit = String(totalRow?.pf_unit ?? 'pf');
+  const pfAlert = Number(totalRow?.pf_alert ?? totalRow?.pfAlert ?? 0);
+  const pfVio = totalRow?.pf_vio ?? totalRow?.pfVio;
+  const pfLabel = String(totalRow?.pf_type ?? totalRow?.pfType ?? d.pf_type ?? 'LAG').toUpperCase();
+  const hasPfVal = totalRow?.pf_val !== null && totalRow?.pf_val !== undefined && String(totalRow.pf_val).trim() !== '';
+  const pfRawVal = hasPfVal ? String(totalRow.pf_val).trim() : (pfNum > 0 ? pfNum.toFixed(2) : '0');
+
+
+  const pfIconIdx = totalRow?.pf_icon !== undefined && totalRow?.pf_icon !== null
+    ? Math.max(0, Math.min(9, Number(totalRow.pf_icon)))
+    : (totalRow?.pfIcon !== undefined && totalRow?.pfIcon !== null
+      ? Math.max(0, Math.min(9, Number(totalRow.pfIcon)))
+      : Math.max(0, Math.min(9, Math.round(pfNum * 9))));
 
   powerTotalData.value = {
-    kw: kwNum.toFixed(1),
-    kwUnit: String(totalRow?.kw_unit ?? 'kW'),
-    kwRangeMin: toNumber(totalRow?.kw_range_min, 0),
-    kwRangeMax: Math.max(toNumber(totalRow?.kw_range_max, ratedKw), 1),
-    kwEveMin: toNumber(totalRow?.kw_eve_min, Number.NaN),
-    kwEveMax: toNumber(totalRow?.kw_eve_max, Number.NaN),
-    kva: kvaNum.toFixed(1),
-    kvar: kvarNum.toFixed(1),
-    pf: pfNum.toFixed(2),
-    pfLabel
+    kw: totalRow?.kw_val !== null && totalRow?.kw_val !== undefined ? String(totalRow.kw_val) : kwNum.toFixed(1),
+    kwUnit,
+    kwAlert: kwAlert === 1 || getGaugeCalculation(kwNum, kwRangeMin, kwRangeMax, kwEveMin, kwEveMax, 20, kwAlert).isRed ? 1 : 0,
+    kwAlertImg: getAlertBadge(kwVio),
+    kwGaugeImg: getCircularGauge(kwNum, kwRangeMin, kwRangeMax, kwEveMin, kwEveMax, kwAlert),
+
+    kva: totalRow?.kva_val !== null && totalRow?.kva_val !== undefined ? String(totalRow.kva_val) : kvaNum.toFixed(1),
+    kvaUnit,
+    kvaAlert: kvaAlert === 1 || getGaugeCalculation(kvaNum, kvaRangeMin, kvaRangeMax, kvaEveMin, kvaEveMax, 20, kvaAlert).isRed ? 1 : 0,
+    kvaAlertImg: getAlertBadge(kvaVio),
+    kvaGaugeImg: getCircularGauge(kvaNum, kvaRangeMin, kvaRangeMax, kvaEveMin, kvaEveMax, kvaAlert),
+
+    kvar: totalRow?.kvar_val !== null && totalRow?.kvar_val !== undefined ? String(totalRow.kvar_val) : kvarNum.toFixed(1),
+    kvarUnit,
+    kvarAlert: kvarAlert === 1 || getGaugeCalculation(kvarNum, kvarRangeMin, kvarRangeMax, kvarEveMin, kvarEveMax, 20, kvarAlert).isRed ? 1 : 0,
+    kvarAlertImg: getAlertBadge(kvarVio),
+    kvarGaugeImg: getCircularGauge(kvarNum, kvarRangeMin, kvarRangeMax, kvarEveMin, kvarEveMax, kvarAlert),
+
+    pf: pfRawVal,
+    pfUnit,
+    pfAlert,
+    pfAlertImg: getAlertBadge(pfVio),
+    pfGaugeImg: `/pf_${pfIconIdx}.png`,
+    pfLabel,
+    showPfLag: pfRawVal !== '1.0' && pfRawVal !== '1',
   };
 
   const phaseData = (phaseName: string) => {
@@ -1001,16 +1265,31 @@ const applyServerTelemetry = (raw: any, isRunning: boolean, ratedKw: number, rat
     const phaseKva = toNumber(row?.kva_val ?? d[`kva_l${phaseIndex}`] ?? d[`${legacyPrefix}_kva`]);
     const phaseKvar = toNumber(row?.kvar_val ?? d[`kvar_l${phaseIndex}`] ?? d[`${legacyPrefix}_kvar`]);
     const phasePf = toNumber(row?.pf_val ?? d[`pf_l${phaseIndex}`] ?? d[`${legacyPrefix}_pf`], pfNum);
+    const kwAlert = Number(row?.kw_alert ?? row?.kwAlert ?? 0);
+    const kvaAlert = Number(row?.kva_alert ?? row?.kvaAlert ?? 0);
+    const kvarAlert = Number(row?.kvar_alert ?? row?.kvarAlert ?? 0);
+    const pfAlert = Number(row?.pf_alert ?? row?.pfAlert ?? 0);
+
     return {
-      pf: phasePf.toFixed(2),
-      kw: phaseKw.toFixed(1),
+      pf: (row?.pf_val !== undefined && row?.pf_val !== null) ? String(row.pf_val) : phasePf.toFixed(2),
+      pfUnit: String(row?.pf_unit ?? 'pf'),
+      pfAlert,
+      pfAlertImg: getAlertBadge(row?.pf_vio ?? row?.pfVio),
+
+      kw: (row?.kw_val !== undefined && row?.kw_val !== null) ? String(row.kw_val) : phaseKw.toFixed(1),
       kwUnit: String(row?.kw_unit ?? totalRow?.kw_unit ?? 'kW'),
-      kwRangeMin: toNumber(row?.kw_range_min, 0),
-      kwRangeMax: Math.max(toNumber(row?.kw_range_max, ratedKw), 1),
-      kwEveMin: toNumber(row?.kw_eve_min, Number.NaN),
-      kwEveMax: toNumber(row?.kw_eve_max, Number.NaN),
-      kva: phaseKva.toFixed(1),
-      kvar: phaseKvar.toFixed(1)
+      kwAlert,
+      kwAlertImg: getAlertBadge(row?.kw_vio ?? row?.kwVio),
+
+      kva: (row?.kva_val !== undefined && row?.kva_val !== null) ? String(row.kva_val) : phaseKva.toFixed(1),
+      kvaUnit: String(row?.kva_unit ?? totalRow?.kva_unit ?? 'kVA'),
+      kvaAlert,
+      kvaAlertImg: getAlertBadge(row?.kva_vio ?? row?.kvaVio),
+
+      kvar: (row?.kvar_val !== undefined && row?.kvar_val !== null) ? String(row.kvar_val) : phaseKvar.toFixed(1),
+      kvarUnit: String(row?.kvar_unit ?? totalRow?.kvar_unit ?? 'kVAR'),
+      kvarAlert,
+      kvarAlertImg: getAlertBadge(row?.kvar_vio ?? row?.kvarVio),
     };
   };
 
@@ -1021,119 +1300,391 @@ const applyServerTelemetry = (raw: any, isRunning: boolean, ratedKw: number, rat
   };
   console.log('Power parameter values:', powerParam);
 
-  // 3. Energy: sanitize modbus overflow (e.g. 4.2949674E8)
+  // 3. Energy: parse from pars[].val_arr[] based on type ('Generator' / 'Mains')
+  const energyParam = Array.isArray(pars)
+    ? (pars.find((item: any) => String(item?.name ?? '').trim().toLowerCase() === 'energy')
+      ?? pars.find((item: any) => Number(item?.id) === 2))
+    : null;
+  const energyRows = Array.isArray(energyParam?.val_arr) ? energyParam.val_arr : [];
+  console.log('Energy parameter values:', energyParam);
+
   const sanitizeEnergy = (v: any, fallback = '0.0') => {
     if (v === undefined || v === null || v === '') return fallback;
-    const str = String(v);
-    if (str.includes('E8') || str.includes('4.2949') || parseFloat(str) > 10000000) return '0.0';
-    return parseFloat(str).toFixed(1);
+    const str = String(v).trim();
+    if (str.includes('E8') || str.includes('4.2949') || parseFloat(str) > 100000000) return '0.0';
+    const num = parseFloat(str);
+    return isNaN(num) ? str : num.toFixed(1);
   };
 
-  const mainsKwh = sanitizeEnergy(d.mains_kwh || d.mains_active, '0.0');
-  const mainsKvah = sanitizeEnergy(d.mains_kvah || d.mains_apparent, '0.0');
-  const mainsKvarh = sanitizeEnergy(d.mains_kvarh || d.mains_reactive, '0.0');
+  const pickVal = (row: any, keys: string[], fallback: any) => {
+    if (row) {
+      for (const k of keys) {
+        if (row[k] !== undefined && row[k] !== null && row[k] !== '') {
+          return row[k];
+        }
+      }
+    }
+    return fallback;
+  };
 
-  const genKwh = sanitizeEnergy(d.gen_kwh || d.gen_active || d.kwh, '0.0');
-  const genKvah = sanitizeEnergy(d.gen_kvah || d.gen_apparent || d.kvah, '0.0');
-  const genKvarh = sanitizeEnergy(d.gen_kvarh || d.gen_reactive || d.kvarh, '0.0');
+  const buildEnergySlideItems = (row: any, isMains: boolean) => {
+    const rawActive = pickVal(
+      row,
+      ['active_val', 'activeVal', 'active', 'kwh_val', 'kwhVal'],
+      isMains ? (d.mains_kwh ?? d.mains_active) : (d.gen_kwh ?? d.gen_active ?? d.kwh)
+    );
+    const activeVal = sanitizeEnergy(rawActive, '0.0');
+    const activeUnit = String(pickVal(row, ['active_unit', 'activeUnit', 'unit', 'kwh_unit', 'kwhUnit'], 'kWh')).trim();
+
+    const rawApparent = pickVal(
+      row,
+      ['apparent_val', 'apparentVal', 'appar_val', 'apparVal', 'appr_val', 'app_val', 'apparent', 'kvah_val', 'kvahVal'],
+      isMains ? (d.mains_kvah ?? d.mains_apparent) : (d.gen_kvah ?? d.gen_apparent ?? d.kvah)
+    );
+    const apparentVal = sanitizeEnergy(rawApparent, '0.0');
+    const apparentUnit = String(pickVal(row, ['apparent_unit', 'apparentUnit', 'appar_unit', 'apparUnit', 'appr_unit', 'app_unit', 'kvah_unit', 'kvahUnit'], 'kVAh')).trim();
+
+    const rawReactive = pickVal(
+      row,
+      ['reactive_val', 'reactiveVal', 'react_val', 'reactVal', 'reac_val', 'reactive', 'kvarh_val', 'kvarhVal'],
+      isMains ? (d.mains_kvarh ?? d.mains_reactive) : (d.gen_kvarh ?? d.gen_reactive ?? d.kvarh)
+    );
+    const reactiveVal = sanitizeEnergy(rawReactive, '0.0');
+    const reactiveUnit = String(pickVal(row, ['reactive_unit', 'reactiveUnit', 'react_unit', 'reactUnit', 'reac_unit', 'kvarh_unit', 'kvarhUnit'], 'kVARh')).trim();
+
+    return [
+      { label: 'ACTIVE', value: `${activeVal} ${activeUnit}`, isHighlighted: true },
+      { label: 'APPARENT', value: `${apparentVal} ${apparentUnit}`, isHighlighted: false },
+      { label: 'REACTIVE', value: `${reactiveVal} ${reactiveUnit}`, isHighlighted: false },
+    ];
+  };
+
+  const findEnergyRow = (type: string) => energyRows.find(
+    (row: any) => String(row?.type ?? '').trim().toLowerCase() === type.toLowerCase()
+      || String(row?.type ?? '').trim().toLowerCase().includes(type.toLowerCase())
+  );
+
+  const mainsRow = findEnergyRow('Mains') || findEnergyRow('Main');
+  const genRow = findEnergyRow('Generator') || findEnergyRow('Gen');
 
   energySlidesData.value = [
-    {
-      id: 'mains',
-      title: 'Energy - Mains',
-      items: [
-        { label: 'ACTIVE', value: `${mainsKwh} kWh`, isHighlighted: true },
-        { label: 'APPARENT', value: `${mainsKvah} kVAh`, isHighlighted: false },
-        { label: 'REACTIVE', value: `${mainsKvarh} kVARh`, isHighlighted: false },
-      ],
-    },
+    
     {
       id: 'generator',
       title: 'Energy - Generator',
-      items: [
-        { label: 'ACTIVE', value: `${genKwh} kWh`, isHighlighted: true },
-        { label: 'APPARENT', value: `${genKvah} kVAh`, isHighlighted: false },
-        { label: 'REACTIVE', value: `${genKvarh} kVARh`, isHighlighted: false },
-      ],
+      items: buildEnergySlideItems(genRow, false),
+    },
+    {
+      id: 'mains',
+      title: 'Energy - Mains',
+      items: buildEnergySlideItems(mainsRow, true),
     },
   ];
 
-  // 4. RunHour formatting calculation
+  // 4. RunHour: parse from pars[].val_arr[] based on type ('Generator' / 'Mains')
+  const runHourParam = Array.isArray(pars)
+    ? (pars.find((item: any) => {
+        const n = String(item?.name ?? '').trim().toLowerCase();
+        return n.includes('runhour') || n.includes('run_hour') || n.includes('run hour');
+      }) ?? pars.find((item: any) => Number(item?.id) === 3))
+    : null;
+
+  const runHourRows = Array.isArray(runHourParam?.val_arr) ? runHourParam.val_arr : [];
+  console.log('RunHour parameter values:', runHourParam);
+
+  const findRunHourRow = (type: string) => runHourRows.find(
+    (row: any) => String(row?.type ?? '').trim().toLowerCase() === type.toLowerCase()
+      || String(row?.type ?? '').trim().toLowerCase().includes(type.toLowerCase())
+  );
+
+  const mainsRhRow = findRunHourRow('Mains') || findRunHourRow('Main');
+  const genRhRow = findRunHourRow('Generator') || findRunHourRow('Gen');
+
   const fmtRunHour = (v: any, defaultStr = '0 hr 0 min 0 sec') => {
-    if (!v && v !== 0) return defaultStr;
-    const str = String(v);
+    if (v === undefined || v === null || v === '') return defaultStr;
+    const str = String(v).trim();
     if (str.includes('hr') || str.includes('min') || str.includes(':')) return str;
     const num = parseFloat(str);
     if (isNaN(num)) return defaultStr;
     if (num > 360000) {
-      // Seconds
       const h = Math.floor(num / 3600);
       const m = Math.floor((num % 3600) / 60);
       const s = Math.floor(num % 60);
       return `${h} hr ${m} min ${s} sec`;
     }
-    // Float hours
     const h = Math.floor(num);
     const m = Math.round((num - h) * 60);
     return `${h} hr ${m} min 0 sec`;
   };
 
+  const getRhVal = (row: any, keys: string[], fallback: any) => {
+    if (row) {
+      for (const k of keys) {
+        if (row[k] !== undefined && row[k] !== null && row[k] !== '') {
+          return fmtRunHour(row[k]);
+        }
+      }
+    }
+    return fmtRunHour(fallback);
+  };
+
   runHourSlidesData.value = [
-    {
-      id: 'mains',
-      title: 'RunHour - Mains',
-      items: [
-        { label: 'TOTAL', value: fmtRunHour(d.mains_run_total || d.mains_total_rh, '0 hr 0 min 0 sec') },
-        { label: 'TODAY', value: fmtRunHour(d.mains_run_today || d.mains_today_rh, '0 hr 0 min 0 sec') },
-        { label: 'TRIP',  value: fmtRunHour(d.mains_run_trip || d.mains_trip_rh, '0 hr 0 min 0 sec') },
-      ],
-    },
+  
     {
       id: 'generator',
       title: 'RunHour - Generator',
       items: [
-        { label: 'TOTAL', value: fmtRunHour(d.gen_run_total || d.tot_rh || d.rh_total, '0 hr 0 min 0 sec') },
-        { label: 'TODAY', value: fmtRunHour(d.gen_run_today || d.today_rh, '0 hr 0 min 0 sec') },
-        { label: 'TRIP',  value: fmtRunHour(d.gen_run_trip || d.trip_rh, '0 hr 0 min 0 sec') },
+        { label: 'TOTAL', value: getRhVal(genRhRow, ['total_val', 'totalVal', 'total'], d.gen_run_total || d.tot_rh || d.rh_total) },
+        { label: 'TODAY', value: getRhVal(genRhRow, ['today_val', 'todayVal', 'today'], d.gen_run_today || d.today_rh) },
+        { label: 'TRIP',  value: getRhVal(genRhRow, ['trip_val', 'tripVal', 'trip'], d.gen_run_trip || d.trip_rh) },
+      ],
+    },
+  {
+      id: 'mains',
+      title: 'RunHour - Mains',
+      items: [
+        { label: 'TOTAL', value: getRhVal(mainsRhRow, ['total_val', 'totalVal', 'total'], d.mains_run_total || d.mains_total_rh) },
+        { label: 'TODAY', value: getRhVal(mainsRhRow, ['today_val', 'todayVal', 'today'], d.mains_run_today || d.mains_today_rh) },
+        { label: 'TRIP',  value: getRhVal(mainsRhRow, ['trip_val', 'tripVal', 'trip'], d.mains_run_trip || d.mains_trip_rh) },
       ],
     },
   ];
 
-  // 5. Engine
-  const battV = d.battery_volt || d.batt_volt || d.batt || '0.0';
-  const rpmVal = d.rpm !== undefined ? d.rpm : (d.engine_rpm !== undefined ? d.engine_rpm : '0');
-  const fuelVal = d.fuel_level !== undefined ? d.fuel_level : (d.fuel_ltr || '0.0');
-  const oilP = d.oil_pressure !== undefined ? d.oil_pressure : (d.oil_press || '0.0');
-  const oilT = d.oil_temp !== undefined ? d.oil_temp : '0.0';
-  const coolT = d.coolant_temp !== undefined ? d.coolant_temp : '0.0';
+  // 5. Engine: parse from pars[].val_arr[] matching Android implementation
+  const engineParam = Array.isArray(pars)
+    ? (pars.find((item: any) => String(item?.name ?? '').trim().toLowerCase() === 'engine')
+      ?? pars.find((item: any) => Number(item?.id) === 4))
+    : null;
+  const engineRows = Array.isArray(engineParam?.val_arr) ? engineParam.val_arr : [];
+  const engineObj = engineRows.length > 0 ? engineRows[0] : null;
+  console.log('Engine parameter values:', engineParam);
+
+  // Battery
+  const battVal = engineObj?.batt_val ?? engineObj?.battVal ?? d.battery_volt ?? d.batt_volt ?? d.batt ?? '0.0';
+  const battUnit = String(engineObj?.batt_unit ?? engineObj?.battUnit ?? 'V').trim();
+  const battValNum = toNumber(battVal, 0);
+  const battMin = toNumber(engineObj?.batt_range_min ?? engineObj?.battRangeMin, 0);
+  const battMax = toNumber(engineObj?.batt_range_max ?? engineObj?.battRangeMax, 28);
+  const battEveMin = parseEve(engineObj?.batt_eve_min ?? engineObj?.battEveMin);
+  const battEveMax = parseEve(engineObj?.batt_eve_max ?? engineObj?.battEveMax);
+  const battAlert = Number(engineObj?.batt_alert ?? engineObj?.battAlert ?? 0);
+
+  // RPM
+  const rpmVal = engineObj?.rpm_val ?? engineObj?.rpmVal ?? d.rpm ?? d.engine_rpm ?? '0';
+  const rpmUnit = String(engineObj?.rpm_unit ?? engineObj?.rpmUnit ?? 'rpm').trim();
+  const rpmNum = toNumber(rpmVal, 0);
+  const rpmMin = toNumber(engineObj?.rpm_range_min ?? engineObj?.rpmRangeMin, 0);
+  const rpmMax = toNumber(engineObj?.rpm_range_max ?? engineObj?.rpmRangeMax, 3000);
+  const rpmEveMin = parseEve(engineObj?.rpm_eve_min ?? engineObj?.rpmEveMin);
+  const rpmEveMax = parseEve(engineObj?.rpm_eve_max ?? engineObj?.rpmEveMax);
+  const rpmAlert = Number(engineObj?.rpm_alert ?? engineObj?.rpmAlert ?? 0);
+
+  // Fuel
+  const fuelVal = engineObj?.fuel_val ?? engineObj?.fuelVal ?? d.fuel_level ?? d.fuel_ltr ?? '0.0';
+  const fuelUnit = String(engineObj?.fuel_unit ?? engineObj?.fuelUnit ?? 'L').trim();
+  const fuelValNum = toNumber(fuelVal, 0);
+  const fuelMin = toNumber(engineObj?.fuel_range_min ?? engineObj?.fuelRangeMin, 0);
+  const fuelMax = toNumber(engineObj?.fuel_range_max ?? engineObj?.fuelRangeMax, 1000);
+  const fuelEveMin = parseEve(engineObj?.fuel_eve_min ?? engineObj?.fuelEveMin);
+  const fuelEveMax = parseEve(engineObj?.fuel_eve_max ?? engineObj?.fuelEveMax);
+  const fuelAlert = Number(engineObj?.fuel_alert ?? engineObj?.fuelAlert ?? 0);
+
+  // Oil Pressure
+  const oilPresVal = engineObj?.oil_pres_val ?? engineObj?.oilPresVal ?? d.oil_pressure ?? d.oil_press ?? '0.0';
+  const oilPresUnit = String(engineObj?.oil_pres_unit ?? engineObj?.oilPresUnit ?? 'Kpa').trim();
+  const oilPresNum = toNumber(oilPresVal, 0);
+  const oilPresMin = toNumber(engineObj?.oil_pres_range_min ?? engineObj?.oilPresRangeMin, 0);
+  const oilPresMax = toNumber(engineObj?.oil_pres_range_max ?? engineObj?.oilPresRangeMax, 1000);
+  const oilPresEveMin = parseEve(engineObj?.oil_pres_eve_min ?? engineObj?.oil_eve_min ?? engineObj?.oilPresEveMin);
+  const oilPresEveMax = parseEve(engineObj?.oil_pres_eve_max ?? engineObj?.oil_eve_max ?? engineObj?.oilPresEveMax);
+  const oilPresAlert = Number(engineObj?.oil_pres_alert ?? engineObj?.oilPresAlert ?? 0);
+
+  // Oil Temp
+  const oilTempVal = engineObj?.oil_temp_val ?? engineObj?.oilTempVal ?? d.oil_temp ?? '0.0';
+  const oilTempUnit = String(engineObj?.oil_temp_unit ?? engineObj?.oilTempUnit ?? '°C').trim();
+  const oilTempNum = toNumber(oilTempVal, 0);
+  const oilTempMin = toNumber(engineObj?.oil_temp_range_min ?? engineObj?.oilTempRangeMin, 0);
+  const oilTempMax = toNumber(engineObj?.oil_temp_range_max ?? engineObj?.oilTempRangeMax, 150);
+  const oilTempEveMin = parseEve(engineObj?.oil_temp_eve_min ?? engineObj?.oilTempEveMin);
+  const oilTempEveMax = parseEve(engineObj?.oil_temp_eve_max ?? engineObj?.oilTempEveMax);
+  const oilTempAlert = Number(engineObj?.oil_temp_alert ?? engineObj?.oilTempAlert ?? 0);
+
+  // Coolant Temp
+  const coolTempVal = engineObj?.cool_temp_val ?? engineObj?.coolTempVal ?? d.coolant_temp ?? '0.0';
+  const coolTempUnit = String(engineObj?.cool_temp_unit ?? engineObj?.coolTempUnit ?? '°C').trim();
+  const coolTempNum = toNumber(coolTempVal, 0);
+  const coolTempMin = toNumber(engineObj?.cool_temp_range_min ?? engineObj?.coolTempRangeMin, 0);
+  const coolTempMax = toNumber(engineObj?.cool_temp_range_max ?? engineObj?.coolTempRangeMax, 150);
+  const coolTempEveMin = parseEve(engineObj?.cool_temp_eve_min ?? engineObj?.coolTempEveMin);
+  const coolTempEveMax = parseEve(engineObj?.cool_temp_eve_max ?? engineObj?.coolTempEveMax);
+  const coolTempAlert = Number(engineObj?.cool_temp_alert ?? engineObj?.coolTempAlert ?? 0);
 
   engineData.value = {
-    battery: { voltage: `${parseFloat(battV).toFixed(1)} V`, level: Math.min(1.0, parseFloat(battV) / 28) },
-    oilPressure: `${parseFloat(oilP).toFixed(1)} Kpa`,
-    rpm: String(rpmVal),
-    oilTemp: `${parseFloat(oilT).toFixed(1)} °C`,
-    fuel: { levelValue: `${parseFloat(fuelVal).toFixed(1)} L`, level: Math.min(1.0, parseFloat(fuelVal) / 600) },
-    coolantTemp: `${parseFloat(coolT).toFixed(1)} °C`,
+    battery: {
+      voltage: `${battValNum.toFixed(1)} ${battUnit}`,
+      isAlert: battAlert === 1 || getGaugeCalculation(battValNum, battMin, battMax, battEveMin, battEveMax, 8, battAlert).isRed,
+      gaugeImg: getVBarGauge(battValNum, battMin, battMax, battEveMin, battEveMax, battAlert),
+      alertImg: getAlertBadge(engineObj?.batt_vio ?? engineObj?.battVio),
+      level: Math.min(1.0, battValNum / 28)
+    },
+    rpm: (engineObj?.rpm_val !== undefined && engineObj?.rpm_val !== null) ? String(engineObj.rpm_val) : (rpmNum > 0 ? rpmNum.toFixed(1) : String(rpmVal)),
+    rpmUnit: rpmUnit,
+    rpmAlert: rpmAlert === 1 || getGaugeCalculation(rpmNum, rpmMin, rpmMax, rpmEveMin, rpmEveMax, 20, rpmAlert).isRed,
+    rpmGaugeImg: getCircularGauge(rpmNum, rpmMin, rpmMax, rpmEveMin, rpmEveMax, rpmAlert),
+    rpmAlertImg: getAlertBadge(engineObj?.rpm_vio ?? engineObj?.rpmVio),
+    fuel: {
+      levelValue: `${fuelValNum.toFixed(1)} ${fuelUnit}`,
+      isAlert: fuelAlert === 1 || getGaugeCalculation(fuelValNum, fuelMin, fuelMax, fuelEveMin, fuelEveMax, 8, fuelAlert).isRed,
+      gaugeImg: getVBarGauge(fuelValNum, fuelMin, fuelMax, fuelEveMin, fuelEveMax, fuelAlert),
+      alertImg: getAlertBadge(engineObj?.fuel_vio ?? engineObj?.fuelVio),
+      level: Math.min(1.0, fuelValNum / 600)
+    },
+    oilPressure: `${oilPresNum.toFixed(1)} ${oilPresUnit}`,
+    oilPresAlert: oilPresAlert === 1 || getGaugeCalculation(oilPresNum, oilPresMin, oilPresMax, oilPresEveMin, oilPresEveMax, 8, oilPresAlert).isRed,
+    oilPresGaugeImg: getVBarGauge(oilPresNum, oilPresMin, oilPresMax, oilPresEveMin, oilPresEveMax, oilPresAlert),
+    oilPresAlertImg: getAlertBadge(engineObj?.oil_pres_vio ?? engineObj?.oilPresVio),
+    oilTemp: `${oilTempNum.toFixed(1)} ${oilTempUnit}`,
+    oilTempAlert: oilTempAlert === 1 || getGaugeCalculation(oilTempNum, oilTempMin, oilTempMax, oilTempEveMin, oilTempEveMax, 8, oilTempAlert).isRed,
+    oilTempGaugeImg: getVBarGauge(oilTempNum, oilTempMin, oilTempMax, oilTempEveMin, oilTempEveMax, oilTempAlert),
+    oilTempAlertImg: getAlertBadge(engineObj?.oil_temp_vio ?? engineObj?.oilTempVio),
+    coolantTemp: `${coolTempNum.toFixed(1)} ${coolTempUnit}`,
+    coolTempAlert: coolTempAlert === 1 || getGaugeCalculation(coolTempNum, coolTempMin, coolTempMax, coolTempEveMin, coolTempEveMax, 8, coolTempAlert).isRed,
+    coolantTempGaugeImg: getVBarGauge(coolTempNum, coolTempMin, coolTempMax, coolTempEveMin, coolTempEveMax, coolTempAlert),
+    coolantTempAlertImg: getAlertBadge(engineObj?.cool_temp_vio ?? engineObj?.coolTempVio),
   };
 
-  // 6. V and I
-  const freqVal = d.freq_l1 || d.freq || d.hz || '0.0';
-  const vL1N = d.volt_l1n || d.vl1n || '0.0';
-  const vL2N = d.volt_l2n || d.vl2n || '0.0';
-  const vL3N = d.volt_l3n || d.vl3n || '0.0';
+  // 6. V and I: parse from pars[].val_arr[] matching Android implementation
+  const viParam = Array.isArray(pars)
+    ? (pars.find((item: any) => {
+        const n = String(item?.name ?? '').trim().toLowerCase();
+        return n === 'v and i' || n === 'v & i' || n === 'vandi' || n === 'voltage & current' || n === 'vi';
+      }) ?? pars.find((item: any) => Number(item?.id) === 5))
+    : null;
+  const viRows = Array.isArray(viParam?.val_arr) ? viParam.val_arr : [];
+  const viObj = viRows.length > 0 ? viRows[0] : null;
+  console.log('VI parameter values:', viParam);
 
-  const vL1L2 = d.volt_l1l2 || d.vl1l2 || (parseFloat(vL1N) > 0 ? (parseFloat(vL1N) * Math.sqrt(3)).toFixed(1) : '0.0');
-  const vL2L3 = d.volt_l2l3 || d.vl2l3 || (parseFloat(vL2N) > 0 ? (parseFloat(vL2N) * Math.sqrt(3)).toFixed(1) : '0.0');
-  const vL3L1 = d.volt_l3l1 || d.vl3l1 || (parseFloat(vL3N) > 0 ? (parseFloat(vL3N) * Math.sqrt(3)).toFixed(1) : '0.0');
+    // Helper to pick the first existing key with valid value
+  const pickVal_Vi = (obj: any, keys: string[], fallback = '0.0') => {
+    if (!obj) return fallback;
+    for (const k of keys) {
+      if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== '') {
+        const v = obj[k];
+        return typeof v === 'number' ? (Number.isInteger(v) ? String(v) : v.toFixed(1)) : String(v).trim();
+      }
+    }
+    return fallback;
+  };
 
-  const avgLineV = ((parseFloat(vL1L2) + parseFloat(vL2L3) + parseFloat(vL3L1)) / 3).toFixed(1);
-  const avgPhaseV = ((parseFloat(vL1N) + parseFloat(vL2N) + parseFloat(vL3N)) / 3).toFixed(1);
+
+  const freqL1 = pickVal_Vi(viObj, ['l1_freq_val', 'l1_freq', 'freq_l1'], '0.0');
+  const freqL1Unit = pickVal_Vi(viObj, ['l1_freq_unit'], 'Hz');
+  const freqL2 = pickVal_Vi(viObj, ['l2_freq_val', 'l2_freq', 'freq_l2'], freqL1);
+  const freqL2Unit = pickVal_Vi(viObj, ['l2_freq_unit'], freqL1Unit);
+  const freqL3 = pickVal_Vi(viObj, ['l3_freq_val', 'l3_freq', 'freq_l3'], freqL1);
+  const freqL3Unit = pickVal_Vi(viObj, ['l3_freq_unit'], freqL1Unit);
+
+  // 2. Current (matching Android l1_curr_val, l1_curr_unit, etc.)
+  const currL1 = pickVal_Vi(viObj, ['l1_curr_val', 'l1_curr', 'curr_l1'], '0.0');
+  const currL1Unit = pickVal_Vi(viObj, ['l1_curr_unit'], 'A');
+  const currL2 = pickVal_Vi(viObj, ['l2_curr_val', 'l2_curr', 'curr_l2'], '0.0');
+  const currL2Unit = pickVal_Vi(viObj, ['l2_curr_unit'], 'A');
+  const currL3 = pickVal_Vi(viObj, ['l3_curr_val', 'l3_curr', 'curr_l3'], '0.0');
+  const currL3Unit =  pickVal_Vi(viObj, ['l3_curr_unit'], 'A');
+
+  // 3. Voltage Line-to-Neutral (matching Android L1_N_val, L1_N_unit, etc.)
+  const vL1N = pickVal_Vi(viObj, ['L1_N_val', 'l1_n_val', 'l1n_val', 'volt_l1n'], '0.0');
+  const vL1NUnit = pickVal_Vi(viObj, ['L1_N_unit', 'l1_n_unit', 'l1n_unit'], 'V');
+  const vL1NAlert = Number(viObj?.L1_N_alert ?? viObj?.l1_n_alert ?? 0);
+  const vL1NVio = viObj?.L1_N_vio ?? viObj?.l1_n_vio;
+
+  const vL2N = pickVal_Vi(viObj, ['L2_N_val', 'l2_n_val', 'l2n_val', 'volt_l2n'], '0.0');
+  const vL2NUnit = pickVal_Vi(viObj, ['L2_N_unit', 'l2_n_unit', 'l2n_unit'], 'V');
+  const vL2NAlert = Number(viObj?.L2_N_alert ?? viObj?.l2_n_alert ?? 0);
+  const vL2NVio = viObj?.L2_N_vio ?? viObj?.l2_n_vio;
+
+  const vL3N = pickVal_Vi(viObj, ['L3_N_val', 'l3_n_val', 'l3n_val', 'volt_l3n'], '0.0');
+  const vL3NUnit = pickVal_Vi(viObj, ['L3_N_unit', 'l3_n_unit', 'l3n_unit'], 'V');
+  const vL3NAlert = Number(viObj?.L3_N_alert ?? viObj?.l3_n_alert ?? 0);
+  const vL3NVio = viObj?.L3_N_vio ?? viObj?.l3_n_vio;
+
+  // 4. Voltage Line-to-Line (matching Android L1_L2_val, L2_L3_val, L3_L1_val, etc.)
+  const vL1L2 = pickVal_Vi(viObj, ['L1_L2_val', 'l1_l2_val', 'l1l2_val', 'volt_l1l2'], '0.0');
+  const vL1L2Unit = pickVal_Vi(viObj, ['L1_L2_unit', 'l1_l2_unit', 'l1l2_unit'], 'V');
+  const vL1L2Alert = Number(viObj?.L1_L2_alert ?? viObj?.l1_l2_alert ?? 0);
+  const vL1L2Vio = viObj?.L1_L2_vio ?? viObj?.l1_l2_vio;
+
+  const vL2L3 = pickVal_Vi(viObj, ['L2_L3_val', 'l2_l3_val', 'l2l3_val', 'volt_l2l3'], '0.0');
+  const vL2L3Unit = pickVal_Vi(viObj, ['L2_L3_unit', 'l2_l3_unit', 'l2l3_unit'], 'V');
+  const vL2L3Alert = Number(viObj?.L2_L3_alert ?? viObj?.l2_l3_alert ?? 0);
+  const vL2L3Vio = viObj?.L2_L3_vio ?? viObj?.l2_l3_vio;
+
+  const vL3L1 = pickVal_Vi(viObj, ['L3_L1_val', 'l3_l1_val', 'l3l1_val', 'volt_l3l1'], '0.0');
+  const vL3L1Unit = pickVal_Vi(viObj, ['L3_L1_unit', 'l3_l1_unit', 'l3l1_unit'], 'V');
+  const vL3L1Alert = Number(viObj?.L3_L1_alert ?? viObj?.l3_l1_alert ?? 0);
+  const vL3L1Vio = viObj?.L3_L1_vio ?? viObj?.l3_l1_vio;
+
+  // 5. Summary (matching Android lv_val, pv_val, c_val or Lv_summ_val, etc.)
+  const lineVoltVal = pickVal_Vi(viObj, ['lv_val', 'Lv_summ_val', 'line_volt_val'], '0.0');
+  const lineVoltUnit = pickVal_Vi(viObj, ['lv_unit', 'Lv_summ_unit'], 'V');
+  const lineVoltAlert = Number(viObj?.lv_alert ?? viObj?.Lv_summ_alert ?? 0);
+  const lineVoltVio = viObj?.lv_vio ?? viObj?.Lv_summ_vio;
+
+  const phaseVoltVal = pickVal_Vi(viObj, ['pv_val', 'pv_summ_val', 'phase_volt_val'], '0.0');
+  const phaseVoltUnit = pickVal_Vi(viObj, ['pv_unit', 'pv_summ_unit'], 'V');
+  const phaseVoltAlert = Number(viObj?.pv_alert ?? viObj?.pv_summ_alert ?? 0);
+  const phaseVoltVio = viObj?.pv_vio ?? viObj?.pv_summ_vio;
+
+  const totalCurrVal = pickVal_Vi(viObj, ['c_val', 'c_summ_val', 'tot_curr'], '0.0');
+  const totalCurrUnit = pickVal_Vi(viObj, ['c_unit', 'c_summ_unit'], 'A');
+  const totalCurrAlert = Number(viObj?.c_alert ?? viObj?.c_summ_alert ?? 0);
+  const totalCurrVio = viObj?.c_vio ?? viObj?.c_summ_vio;
 
   const ratedAmps = Math.round((ratedKva * 1000) / (Math.sqrt(3) * 400));
-  const currL1 = d.curr_l1 || d.i_l1 || '0.0';
-  const currL2 = d.curr_l2 || d.i_l2 || '0.0';
-  const currL3 = d.curr_l3 || d.i_l3 || '0.0';
-  const totalCurr = d.tot_curr || (parseFloat(currL1) + parseFloat(currL2) + parseFloat(currL3)).toFixed(1);
+
+  // Current thresholds & alerts matching Android
+  const currL1Num = toNumber(currL1, 0);
+  const currL1Min = toNumber(viObj?.l1_curr_range_min ?? viObj?.l1CurrRangeMin, 0);
+  const currL1Max = toNumber(viObj?.l1_curr_range_max ?? viObj?.l1CurrRangeMax, ratedAmps || 100);
+  const currL1EveMin = parseEve(viObj?.l1_curr_eve_min ?? viObj?.l1CurrEveMin);
+  const currL1EveMax = parseEve(viObj?.l1_curr_eve_max ?? viObj?.l1CurrEveMax);
+  const currL1Alert = Number(viObj?.l1_curr_alert ?? viObj?.l1CurrAlert ?? 0);
+  const currL1Vio = viObj?.l1_curr_vio ?? viObj?.l1CurrVio;
+
+  const currL2Num = toNumber(currL2, 0);
+  const currL2Min = toNumber(viObj?.l2_curr_range_min ?? viObj?.l2CurrRangeMin, 0);
+  const currL2Max = toNumber(viObj?.l2_curr_range_max ?? viObj?.l2CurrRangeMax, ratedAmps || 100);
+  const currL2EveMin = parseEve(viObj?.l2_curr_eve_min ?? viObj?.l2CurrEveMin);
+  const currL2EveMax = parseEve(viObj?.l2_curr_eve_max ?? viObj?.l2CurrEveMax);
+  const currL2Alert = Number(viObj?.l2_curr_alert ?? viObj?.l2CurrAlert ?? 0);
+  const currL2Vio = viObj?.l2_curr_vio ?? viObj?.l2CurrVio;
+
+  const currL3Num = toNumber(currL3, 0);
+  const currL3Min = toNumber(viObj?.l3_curr_range_min ?? viObj?.l3CurrRangeMin, 0);
+  const currL3Max = toNumber(viObj?.l3_curr_range_max ?? viObj?.l3CurrRangeMax, ratedAmps || 100);
+  const currL3EveMin = parseEve(viObj?.l3_curr_eve_min ?? viObj?.l3CurrEveMin);
+  const currL3EveMax = parseEve(viObj?.l3_curr_eve_max ?? viObj?.l3CurrEveMax);
+  const currL3Alert = Number(viObj?.l3_curr_alert ?? viObj?.l3CurrAlert ?? 0);
+  const currL3Vio = viObj?.l3_curr_vio ?? viObj?.l3CurrVio;
+
+  // Summary thresholds & alerts matching Android
+  const lineVoltNum = toNumber(lineVoltVal, 0);
+  const lineVoltMin = toNumber(viObj?.lv_range_min ?? viObj?.Lv_summ_range_min, 0);
+  const lineVoltMax = toNumber(viObj?.lv_range_max ?? viObj?.Lv_summ_range_max, 500);
+  const lineVoltEveMin = parseEve(viObj?.lv_eve_min ?? viObj?.Lv_summ_eve_min);
+  const lineVoltEveMax = parseEve(viObj?.lv_eve_max ?? viObj?.Lv_summ_eve_max);
+
+  const phaseVoltNum = toNumber(phaseVoltVal, 0);
+  const phaseVoltMin = toNumber(viObj?.pv_range_min ?? viObj?.pv_summ_range_min, 0);
+  const phaseVoltMax = toNumber(viObj?.pv_range_max ?? viObj?.pv_summ_range_max, 300);
+  const phaseVoltEveMin = parseEve(viObj?.pv_eve_min ?? viObj?.pv_summ_eve_min);
+  const phaseVoltEveMax = parseEve(viObj?.pv_eve_max ?? viObj?.pv_summ_eve_max);
+
+  const totalCurrNum = toNumber(totalCurrVal, 0);
+  const totalCurrMin = toNumber(viObj?.c_range_min ?? viObj?.c_summ_range_min, 0);
+  const totalCurrMax = toNumber(viObj?.c_range_max ?? viObj?.c_summ_range_max, (ratedAmps * 3) || 300);
+  const totalCurrEveMin = parseEve(viObj?.c_eve_min ?? viObj?.c_summ_eve_min);
+  const totalCurrEveMax = parseEve(viObj?.c_eve_max ?? viObj?.c_summ_eve_max);
 
   vAndISlidesData.value = [
     {
@@ -1141,9 +1692,9 @@ const applyServerTelemetry = (raw: any, isRunning: boolean, ratedKw: number, rat
       title: 'Frequency',
       type: 'simple-list',
       items: [
-        { label: 'L1', value: `${parseFloat(freqVal).toFixed(1)} Hz` },
-        { label: 'L2', value: `${parseFloat(d.freq_l2 || freqVal).toFixed(1)} Hz` },
-        { label: 'L3', value: `${parseFloat(d.freq_l3 || freqVal).toFixed(1)} Hz` },
+        { label: 'L1', value: `${freqL1} ${freqL1Unit}`, isAlert: Number(viObj?.l1_freq_alert ?? 0) === 1, alertImg: getAlertBadge(viObj?.l1_freq_vio) },
+        { label: 'L2', value: `${freqL2} ${freqL2Unit}`, isAlert: Number(viObj?.l2_freq_alert ?? 0) === 1, alertImg: getAlertBadge(viObj?.l2_freq_vio) },
+        { label: 'L3', value: `${freqL3} ${freqL3Unit}`, isAlert: Number(viObj?.l3_freq_alert ?? 0) === 1, alertImg: getAlertBadge(viObj?.l3_freq_vio) },
       ],
     },
     {
@@ -1151,9 +1702,27 @@ const applyServerTelemetry = (raw: any, isRunning: boolean, ratedKw: number, rat
       title: 'Current',
       type: 'list-with-indicator',
       items: [
-        { label: 'L1', value: `${parseFloat(currL1).toFixed(1)} A`, level: ratedAmps > 0 ? parseFloat(currL1) / ratedAmps : 0 },
-        { label: 'L2', value: `${parseFloat(currL2).toFixed(1)} A`, level: ratedAmps > 0 ? parseFloat(currL2) / ratedAmps : 0 },
-        { label: 'L3', value: `${parseFloat(currL3).toFixed(1)} A`, level: ratedAmps > 0 ? parseFloat(currL3) / ratedAmps : 0 },
+        {
+          label: 'L1',
+          value: `${currL1} ${currL1Unit}`,
+          isAlert: currL1Alert === 1 || getGaugeCalculation(currL1Num, currL1Min, currL1Max, currL1EveMin, currL1EveMax, 8, currL1Alert).isRed,
+          gaugeImg: getBarGauge(currL1Num, currL1Min, currL1Max, currL1EveMin, currL1EveMax, currL1Alert),
+          alertImg: getAlertBadge(currL1Vio)
+        },
+        {
+          label: 'L2',
+          value: `${currL2} ${currL2Unit}`,
+          isAlert: currL2Alert === 1 || getGaugeCalculation(currL2Num, currL2Min, currL2Max, currL2EveMin, currL2EveMax, 8, currL2Alert).isRed,
+          gaugeImg: getBarGauge(currL2Num, currL2Min, currL2Max, currL2EveMin, currL2EveMax, currL2Alert),
+          alertImg: getAlertBadge(currL2Vio)
+        },
+        {
+          label: 'L3',
+          value: `${currL3} ${currL3Unit}`,
+          isAlert: currL3Alert === 1 || getGaugeCalculation(currL3Num, currL3Min, currL3Max, currL3EveMin, currL3EveMax, 8, currL3Alert).isRed,
+          gaugeImg: getBarGauge(currL3Num, currL3Min, currL3Max, currL3EveMin, currL3EveMax, currL3Alert),
+          alertImg: getAlertBadge(currL3Vio)
+        },
       ],
     },
     {
@@ -1161,14 +1730,14 @@ const applyServerTelemetry = (raw: any, isRunning: boolean, ratedKw: number, rat
       title: 'Voltage',
       type: 'dual-column',
       leftColumn: [
-        { label: 'L1 - N', value: `${parseFloat(vL1N).toFixed(1)} V` },
-        { label: 'L2 - N', value: `${parseFloat(vL2N).toFixed(1)} V` },
-        { label: 'L3 - N', value: `${parseFloat(vL3N).toFixed(1)} V` },
+        { label: 'L1 - N', value: `${vL1N} ${vL1NUnit}`, isAlert: vL1NAlert === 1, alertImg: getAlertBadge(vL1NVio) },
+        { label: 'L2 - N', value: `${vL2N} ${vL2NUnit}`, isAlert: vL2NAlert === 1, alertImg: getAlertBadge(vL2NVio) },
+        { label: 'L3 - N', value: `${vL3N} ${vL3NUnit}`, isAlert: vL3NAlert === 1, alertImg: getAlertBadge(vL3NVio) },
       ],
       rightColumn: [
-        { label: 'L1 - L2', value: `${parseFloat(vL1L2).toFixed(1)} V` },
-        { label: 'L2 - L3', value: `${parseFloat(vL2L3).toFixed(1)} V` },
-        { label: 'L3 - L1', value: `${parseFloat(vL3L1).toFixed(1)} V` },
+        { label: 'L1 - L2', value: `${vL1L2} ${vL1L2Unit}`, isAlert: vL1L2Alert === 1, alertImg: getAlertBadge(vL1L2Vio) },
+        { label: 'L2 - L3', value: `${vL2L3} ${vL2L3Unit}`, isAlert: vL2L3Alert === 1, alertImg: getAlertBadge(vL2L3Vio) },
+        { label: 'L3 - L1', value: `${vL3L1} ${vL3L1Unit}`, isAlert: vL3L1Alert === 1, alertImg: getAlertBadge(vL3L1Vio) },
       ],
     },
     {
@@ -1176,12 +1745,31 @@ const applyServerTelemetry = (raw: any, isRunning: boolean, ratedKw: number, rat
       title: 'Summary',
       type: 'list-with-indicator',
       items: [
-        { label: 'AVG. LINE VOLT', value: `${avgLineV} V`, level: parseFloat(avgLineV) / 500 },
-        { label: 'AVG. PHASE VOLT', value: `${avgPhaseV} V`, level: parseFloat(avgPhaseV) / 300 },
-        { label: 'TOTAL CURRENT', value: `${totalCurr} A`, level: ratedAmps > 0 ? parseFloat(totalCurr) / (ratedAmps * 3) : 0 },
+        {
+          label: 'AVG. LINE VOLT',
+          value: `${lineVoltVal} ${lineVoltUnit}`,
+          isAlert: lineVoltAlert === 1 || getGaugeCalculation(lineVoltNum, lineVoltMin, lineVoltMax, lineVoltEveMin, lineVoltEveMax, 8, lineVoltAlert).isRed,
+          gaugeImg: getBarGauge(lineVoltNum, lineVoltMin, lineVoltMax, lineVoltEveMin, lineVoltEveMax, lineVoltAlert),
+          alertImg: getAlertBadge(lineVoltVio)
+        },
+        {
+          label: 'AVG. PHASE VOLT',
+          value: `${phaseVoltVal} ${phaseVoltUnit}`,
+          isAlert: phaseVoltAlert === 1 || getGaugeCalculation(phaseVoltNum, phaseVoltMin, phaseVoltMax, phaseVoltEveMin, phaseVoltEveMax, 8, phaseVoltAlert).isRed,
+          gaugeImg: getBarGauge(phaseVoltNum, phaseVoltMin, phaseVoltMax, phaseVoltEveMin, phaseVoltEveMax, phaseVoltAlert),
+          alertImg: getAlertBadge(phaseVoltVio)
+        },
+        {
+          label: 'TOTAL CURRENT',
+          value: `${totalCurrVal} ${totalCurrUnit}`,
+          isAlert: totalCurrAlert === 1 || getGaugeCalculation(totalCurrNum, totalCurrMin, totalCurrMax, totalCurrEveMin, totalCurrEveMax, 8, totalCurrAlert).isRed,
+          gaugeImg: getBarGauge(totalCurrNum, totalCurrMin, totalCurrMax, totalCurrEveMin, totalCurrEveMax, totalCurrAlert),
+          alertImg: getAlertBadge(totalCurrVio)
+        },
       ],
     },
   ];
+
 };
 
 // SVG arc calculation helper for gauges (radius 38, centered at 50, 50)
@@ -1199,6 +1787,29 @@ const gaugeArc = (value: any, maxVal: number, minVal = 0) => {
   return `M 12 50 A 38 38 0 0 1 ${x.toFixed(1)} ${y.toFixed(1)}`;
 };
 
+// Draw a dashboard-style segmented half gauge, matching the Android dashboard.
+const gaugeTicks = (value: any, maxVal: number, minVal = 0) => {
+  const count = 25;
+  const v = Number(value);
+  const min = Number.isFinite(minVal) ? minVal : 0;
+  const max = Number.isFinite(maxVal) && maxVal > min ? maxVal : min + 1;
+  const pct = Math.max(0, Math.min(1, ( (Number.isFinite(v) ? v : 0) - min) / (max - min)));
+  return Array.from({ length: count }, (_, index) => {
+    const angle = Math.PI - (index / (count - 1)) * Math.PI;
+    const inner = 32;
+    const outer = 38;
+    const x1 = 50 + inner * Math.cos(angle);
+    const y1 = 50 - inner * Math.sin(angle);
+    const x2 = 50 + outer * Math.cos(angle);
+    const y2 = 50 - outer * Math.sin(angle);
+    return {
+      index,
+      d: `M ${x1.toFixed(2)} ${y1.toFixed(2)} L ${x2.toFixed(2)} ${y2.toFixed(2)}`,
+      active: index / (count - 1) <= pct
+    };
+  });
+};
+
 const isOutOfEventRange = (value: any, eveMin: number, eveMax: number) => {
   const v = Number(value);
   if (!Number.isFinite(v) || !Number.isFinite(eveMin) || !Number.isFinite(eveMax)) return false;
@@ -1206,16 +1817,18 @@ const isOutOfEventRange = (value: any, eveMin: number, eveMax: number) => {
 };
 
 const powerTotalData = ref({
-  kw: '0.0', kwUnit: 'kW', kwRangeMin: 0, kwRangeMax: 120, kwEveMin: 0, kwEveMax: 120,
-  kva: '0.0',
-  kvar: '0.0',
-  pf: '0.0',
-  pfLabel: 'LAG'
+  kw: '0.0', kwUnit: 'kW', kwAlert: 0, kwAlertImg: null as string | null, kwGaugeImg: '/cgg_0.png',
+  kva: '0.0', kvaUnit: 'kVA', kvaAlert: 0, kvaAlertImg: null as string | null, kvaGaugeImg: '/cgg_0.png',
+  kvar: '0.0', kvarUnit: 'kVAR', kvarAlert: 0, kvarAlertImg: null as string | null, kvarGaugeImg: '/cgg_0.png',
+  pf: '0.0', pfUnit: 'pf', pfAlert: 0, pfAlertImg: null as string | null, pfGaugeImg: '/pf_0.png',
+  pfLabel: 'LAG', showPfLag: true,
 });
 
 const emptyPowerPhase = () => ({
-  pf: '0.0', kw: '0.0', kwUnit: 'kW', kwRangeMin: 0, kwRangeMax: 120, kwEveMin: 0, kwEveMax: 120,
-  kva: '0.0', kvar: '0.0'
+  pf: '0.0', pfUnit: 'pf', pfAlert: 0, pfAlertImg: null as string | null,
+  kw: '0.0', kwUnit: 'kW', kwAlert: 0, kwAlertImg: null as string | null,
+  kva: '0.0', kvaUnit: 'kVA', kvaAlert: 0, kvaAlertImg: null as string | null,
+  kvar: '0.0', kvarUnit: 'kVAR', kvarAlert: 0, kvarAlertImg: null as string | null,
 });
 
 const power3PhaseData = ref({
@@ -1225,6 +1838,16 @@ const power3PhaseData = ref({
 });
 
 const energySlidesData = ref([
+  
+  {
+    id: 'generator',
+    title: 'Energy - Generator',
+    items: [
+      { label: 'ACTIVE', value: '0.0 kWh', isHighlighted: true },
+      { label: 'APPARENT', value: '0.0 kVAh', isHighlighted: false },
+      { label: 'REACTIVE', value: '0.0 kVARh', isHighlighted: false },
+    ],
+  },
   {
     id: 'mains',
     title: 'Energy - Mains',
@@ -1234,19 +1857,20 @@ const energySlidesData = ref([
       { label: 'REACTIVE', value: '0.0 kVARh', isHighlighted: false },
     ],
   },
-  {
-    id: 'generator',
-    title: 'Energy - Generator',
-    items: [
-      { label: 'ACTIVE', value: '648816.3 kWh', isHighlighted: true },
-      { label: 'APPARENT', value: '763313.2 kVAh', isHighlighted: false },
-      { label: 'REACTIVE', value: '402266.1 kVARh', isHighlighted: false },
-    ],
-  },
 ]);
 
 const runHourSlidesData = ref([
+
   {
+    id: 'generator',
+    title: 'RunHour - Generator',
+    items: [
+      { label: 'TOTAL', value: '0 hr 0 min 0 sec' },
+      { label: 'TODAY', value: '0 hr 0 min 0 sec' },
+      { label: 'TRIP',  value: '0 hr 0 min 0 sec' },
+    ],
+  },
+    {
     id: 'mains',
     title: 'RunHour - Mains',
     items: [
@@ -1255,30 +1879,40 @@ const runHourSlidesData = ref([
       { label: 'TRIP',  value: '0 hr 0 min 0 sec' },
     ],
   },
-  {
-    id: 'generator',
-    title: 'RunHour - Generator',
-    items: [
-      { label: 'TOTAL', value: '14820 hr 36 min 0 sec' },
-      { label: 'TODAY', value: '5 hr 33 min 0 sec' },
-      { label: 'TRIP',  value: '5 hr 33 min 0 sec' },
-    ],
-  },
 ]);
 
 const engineData = ref({
   battery: {
     voltage: '26.4 V',
+    isAlert: false,
+    gaugeImg: '/vbgg_7.png',
+    alertImg: null as string | null,
     level: 0.88,
   },
   oilPressure: '420.0 Kpa',
+  oilPresAlert: false,
+  oilPresGaugeImg: '/vbgg_4.png',
+  oilPresAlertImg: null as string | null,
   rpm: '1500',
+  rpmUnit: 'rpm',
+  rpmAlert: false,
+  rpmGaugeImg: '/cgg_10.png',
+  rpmAlertImg: null as string | null,
   oilTemp: '84.0 °C',
+  oilTempAlert: false,
+  oilTempGaugeImg: '/vbgg_5.png',
+  oilTempAlertImg: null as string | null,
   fuel: {
     levelValue: '480.0 L',
+    isAlert: false,
+    gaugeImg: '/vbgg_6.png',
+    alertImg: null as string | null,
     level: 0.72,
   },
   coolantTemp: '82.0 °C',
+  coolTempAlert: false,
+  coolantTempGaugeImg: '/vbgg_5.png',
+  coolantTempAlertImg: null as string | null,
 });
 
 const vAndISlidesData = ref([
@@ -1876,7 +2510,7 @@ swiper-slide {
   flex-shrink: 0;
 }
 
-/* ── 1. Power Total 2x2 Gauges ── */
+/* ── 1. Power Total 2x2 Gauges (Android layered images) ── */
 .power-total-container {
   display: flex !important;
   flex-direction: column !important;
@@ -1912,29 +2546,43 @@ swiper-slide {
   overflow: hidden;
 }
 
-.gauge-wrapper {
+/* Circular gauge wrapper (kW, kVA, kVAR) — layers cgb.png + cgg/cgr */
+.circular-gauge-wrapper {
   position: relative;
   width: 100%;
-  max-width: 125px;
-  height: 100%;
+  max-width: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.circular-gauge-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+.circular-gauge-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.circular-gauge-content {
+  position: absolute;
+  bottom: 0.15px;          /* changed from 6px to fit inside the arch */  left: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
 }
-
-.gauge-svg {
-  width: 100%;
-  height: auto;
-  max-height: 56px;
-  overflow: visible;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
-}
-
-.gauge-content {
+.circular-gauge-content1 {
   position: absolute;
-  bottom: 0;
-  left: 0;
+  top:30px;
+  bottom: 0.15px;          /* changed from 6px to fit inside the arch */  left: 0;
   right: 0;
   display: flex;
   flex-direction: column;
@@ -1943,26 +2591,53 @@ swiper-slide {
   text-align: center;
 }
 
-.gauge-content .gauge-value {
-  font-size: 1.15em;
+
+
+.circular-gauge-val {
+  font-size: 1.1em;
   font-weight: 700;
   color: var(--ion-color-whiteTwo, #ffffff);
   line-height: 1;
 }
 
-.gauge-content .gauge-unit {
-  font-size: 0.68em;
+.circular-gauge-unit {
+  font-size: 0.65em;
   font-weight: 600;
   color: var(--ion-color-pinkishGrey, #c4c4c4);
   letter-spacing: 0.3px;
-  margin-top: 2px;
+  margin-top: 1px;
+  text-transform: uppercase;   /* makes "pf" appear as "PF" */
 }
-
-.gauge-lag {
+/* Power Factor LAG text */
+.pf-lag-text {
   font-size: 0.85em;
   color: var(--ion-color-primary, #f59c20);
   font-weight: 700;
   margin-left: 2px;
+}
+
+/* Alert color for power values when alert === 1 */
+.power-alert-color {
+  color: #eb445a !important;
+}
+
+/* Alert badge icon on gauge cards */
+.power-alert-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  z-index: 3;
+}
+
+/* Phase alert badge (in 3-phase rows) */
+.phase-alert-badge {
+  width: 13px;
+  height: 13px;
+  vertical-align: middle;
+  margin-left: 4px;
 }
 
 /* ── Power 3Phase Slide ── */
@@ -2014,7 +2689,7 @@ swiper-slide {
   color: var(--ion-color-primary);
 }
 
-/* ── Engine Slide ── */
+/* ── Engine Slide (Android layered vbar + circular gauges) ── */
 .engine-grid {
   height: 100%;
   width: 100%;
@@ -2032,12 +2707,7 @@ swiper-slide {
   gap: 3px;
   width: 100%;
 }
-.engine-value-large {
-  font-size: 13px;
-  font-weight: bold;
-  color: var(--ion-color-whiteTwo);
-}
-.engine-value-small {
+.engine-val-top {
   font-size: 12px;
   font-weight: bold;
   color: var(--ion-color-whiteTwo);
@@ -2048,25 +2718,82 @@ swiper-slide {
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
-.engine-icon {
-  font-size: 14px;
+
+/* Vertical bar gauge container (stacks vbgb + vbgg/vbgr) */
+.engine-vbar-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-width: 16px;
+  margin: 2px 0;
+}
+.engine-vbar-bg {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+.engine-vbar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+.engine-item-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.engine-alert-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
   width: 14px;
   height: 14px;
-  color: var(--ion-text-color);
+  object-fit: contain;
+  z-index: 2;
 }
-.rpm-gauge {
-  width: 80px;
-  height: 42px;
-  border: 4px solid var(--ion-color-pinkishGrey);
-  border-bottom: none;
-  border-radius: 80px 80px 0 0;
-  border-style: dashed;
+
+/* RPM circular gauge (stacks cgb + cgg/cgr) */
+.rpm-gauge-wrapper {
+  position: relative;
+  width: 90px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rpm-circle-bg {
+  width: 90px;
+  height: 56px;
+  object-fit: contain;
+}
+.rpm-circle-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 90px;
+  height: 56px;
+  object-fit: contain;
+}
+.rpm-inner-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -35%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  padding-bottom: 4px;
-  box-sizing: border-box;
+  justify-content: center;
+}
+.rpm-alert {
+  top: -4px;
+  right: 2px;
 }
 .rpm-value {
   font-size: 13px;
@@ -2077,6 +2804,7 @@ swiper-slide {
 .rpm-unit {
   font-size: 8px;
   color: var(--ion-text-color);
+  margin-top: 1px;
 }
 
 /* ── V and I Slides ── */
@@ -2142,4 +2870,42 @@ swiper-slide {
 .power-out-of-event-range {
   color: var(--ion-color-danger, #eb445a) !important;
 }
+
+.vi-alert-color {
+  color: var(--ion-color-danger, #eb445a) !important;
+}
+
+.vi-alert-badge {
+  width: 13px;
+  height: 13px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.vi-barchart-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.vi-barchart-bg {
+  width: 52px;
+  height: 26px;
+  display: block;
+  object-fit: contain;
+}
+
+.vi-barchart-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 52px;
+  height: 26px;
+  object-fit: contain;
+}
+
 </style>
